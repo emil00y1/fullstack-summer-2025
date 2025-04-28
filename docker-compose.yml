@@ -1,0 +1,42 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: exam_summer_2025
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: exam_summer_2025
+    ports:
+      - 80:80
+    volumes:
+      - .:/app
+
+  mysql:
+    image: mysql:latest
+    container_name: exam_summer_2025_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: exam_summer_2025
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - 3300:3300
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: exam_summer_2025_phpmyadmin
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - 8080:80
+
+volumes:
+  mysql_data:
