@@ -1,18 +1,41 @@
-# Step 1: Start with the official Node.js image
-FROM node:16-alpine
+FROM node:22-slim AS base
 
-# Step 2: Set the working directory
+ARG PORT=3000
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
 WORKDIR /app
 
-# Step 3: Install dependencies
-COPY package.json package-lock.json /app/
-RUN npm install
+FROM base AS dependencies
 
-# Step 4: Copy the rest of the application code
-COPY . /app/
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Step 5: Expose port for the app (default 3000 for Node apps)
-EXPOSE 3000
 
-# Step 6: Set the entry point for the container (run the Node app)
-CMD ["node", "page.jsx"]
+FROM base AS build
+
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY . .
+
+RUN npm run build
+
+FROM base AS run
+
+ENV NODE_ENV=development
+ENV PORT=$PORT
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+COPY --from=build /app/public ./public
+COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE $PORT
+
+ENV HOSTNAME="0.0.0.0"
+CMD ["node", "server.js"]
