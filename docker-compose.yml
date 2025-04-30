@@ -2,8 +2,21 @@ services:
   next-app:
     build:
       context: .
+      target: dev
+      dockerfile: Dockerfile
+    command: npm run dev
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - FAST_REFRESH=true
+      - WATCHPACK_POLLING_INTERVAL=300
+    volumes:
+      - .:/app:cached
+      - /app/node_modules
+      - /app/.next
   mysql:
     image: mysql:latest
     container_name: exam_summer_2025_mysql
