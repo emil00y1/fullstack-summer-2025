@@ -8,9 +8,17 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Existing variables
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
+      # --- Add these ---
+      - DB_HOST=mysql # Use the service name
+      - DB_PORT=3306 # Default MySQL port inside the container network
+      - DB_USER=root # Or a non-root user if you created one
+      - DB_PASSWORD=password # Matches MYSQL_ROOT_PASSWORD in mysql service
+      - DB_NAME=exam_summer_2025 # Matches MYSQL_DATABASE in mysql service
+      # --- End of additions ---
     volumes:
       - .:/app:cached
       - /app/node_modules
