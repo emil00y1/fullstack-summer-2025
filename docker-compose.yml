@@ -2,8 +2,6 @@ services:
   next-app:
     build:
       context: .
-      target: dev
-      dockerfile: Dockerfile
     command: npm run dev
     ports:
       - "3000:3000"
@@ -20,7 +18,7 @@ services:
       - DB_NAME=exam_summer_2025 # Matches MYSQL_DATABASE in mysql service
       # --- End of additions ---
     volumes:
-      - .:/app:cached
+      - .:/app
       - /app/node_modules
       - /app/.next
   mysql:
