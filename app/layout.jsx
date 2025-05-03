@@ -2,6 +2,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeWrapper } from "@/components/ThemeWrapper";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
+import { SideBar } from "@/components/SideBar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import Image from "next/image";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,14 +28,19 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body>
+      <body className="grid grid-cols-[auto_1fr_auto]">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <ThemeWrapper>{children}</ThemeWrapper>
+          <ThemeWrapper>
+            <SidebarProvider>
+              <SideBar />
+            </SidebarProvider>
+            {children}
+          </ThemeWrapper>
         </ThemeProvider>
       </body>
     </html>
