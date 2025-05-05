@@ -1,18 +1,12 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Libre_Franklin } from "next/font/google";
 import { ThemeWrapper } from "@/components/ThemeWrapper";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 import { SideBar } from "@/components/SideBar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import Image from "next/image";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const libreFranklin = Libre_Franklin({
+  variable: "--font-libre-franklin",
   subsets: ["latin"],
 });
 
@@ -25,10 +19,10 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      className={`${libreFranklin.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="grid grid-cols-[auto_1fr_auto]">
+      <body className="overflow-x-hidden">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -36,10 +30,14 @@ export default function RootLayout({ children }) {
           disableTransitionOnChange
         >
           <ThemeWrapper>
-            <SidebarProvider>
-              <SideBar />
-            </SidebarProvider>
-            {children}
+            <div className="max-w-5xl grid grid-cols-[auto_1fr_auto] mx-auto">
+              <header>
+                <SidebarProvider>
+                  <SideBar />
+                </SidebarProvider>
+              </header>
+              {children}
+            </div>
           </ThemeWrapper>
         </ThemeProvider>
       </body>
