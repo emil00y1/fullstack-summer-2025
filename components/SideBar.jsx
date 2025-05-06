@@ -112,8 +112,8 @@ export function SideBar({ ...props }) {
                   <AvatarFallback>A</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col items-start">
-                  <span className="font-medium text-sm">Lime</span>
-                  <span className="text-gray-500 text-xs">@musicbylime</span>
+                  <span className="font-medium text-sm">Emil</span>
+                  <span className="text-gray-500 text-xs">@emilkristensen</span>
                 </div>
               </div>
               <MoreHorizontal className="h-5 w-5" />
