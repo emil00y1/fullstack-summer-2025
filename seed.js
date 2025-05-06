@@ -1,19 +1,49 @@
+// Convert to ES modules syntax or keep require syntax as needed
 const mysql = require("mysql2/promise");
+require("dotenv").config();
 
 async function seed() {
   console.log("Starting database seeding...");
 
-  // Create connection to MySQL
-  // Note: We're using the port 3300 that you mapped in docker-compose
-  const connection = await mysql.createConnection({
-    host: "localhost",
-    port: 3300,
-    user: "root",
-    password: "password",
-    database: "exam_summer_2025",
-  });
+  // Determine which environment we're in
+  const environment = process.env.NODE_ENV || "development";
+  console.log(`Running in ${environment} mode`);
 
-  console.log("Connected to MySQL database");
+  // Set connection config based on environment
+  const dbConfig = {
+    host:
+      environment === "production"
+        ? process.env.PROD_DB_HOST
+        : process.env.DEV_DB_HOST,
+    port: parseInt(
+      environment === "production"
+        ? process.env.PROD_DB_PORT
+        : process.env.DEV_DB_PORT || "3306"
+    ),
+    user:
+      environment === "production"
+        ? process.env.PROD_DB_USER
+        : process.env.DEV_DB_USER,
+    password:
+      environment === "production"
+        ? process.env.PROD_DB_PASSWORD
+        : process.env.DEV_DB_PASSWORD,
+    database:
+      environment === "production"
+        ? process.env.PROD_DB_NAME
+        : process.env.DEV_DB_NAME,
+  };
+
+  // Add SSL configuration for production (Azure)
+  if (environment === "production") {
+    dbConfig.ssl = {
+      rejectUnauthorized: true,
+    };
+  }
+
+  // Create connection to MySQL with the appropriate config
+  const connection = await mysql.createConnection(dbConfig);
+  console.log(`Connected to ${environment} MySQL database`);
 
   try {
     // Drop table if it exists to start fresh
