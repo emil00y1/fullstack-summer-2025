@@ -1,6 +1,5 @@
-// components/PostItem.jsx
-import { useState } from "react";
-import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { toast } from "@/components/ui/sonner";
 import {
   Heart,
   MessageCircle,
@@ -25,21 +24,43 @@ export default function PostItem({ post }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
 
-  // For demo purposes, we'll use a hardcoded userId
-  // In a real app, you'd get this from authentication
-  const currentUserId = 1; // Using user ID 1 (john_doe) for demo
+  // Load comments immediately when component mounts
+  useEffect(() => {
+    (async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/posts/${post.id}/comments`);
+        if (response.ok) {
+          const data = await response.json();
+          setComments(data.comments);
+        } else {
+          throw new Error("Failed to load comments");
+        }
+      } catch (error) {
+        console.error("Error loading comments:", error);
+        toast("Error", {
+          description: "Failed to load comments. Please try again.",
+          type: "error",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [post.id]);
 
   const handleLike = async () => {
     if (isLiking) return;
 
     setIsLiking(true);
     try {
+      // In a real app, you'd get userId from authentication context
       const response = await fetch(`/api/posts/${post.id}/like`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId: currentUserId }),
+        // Remove hardcoded ID and let the backend determine the user
+        body: JSON.stringify({}),
       });
 
       if (response.ok) {

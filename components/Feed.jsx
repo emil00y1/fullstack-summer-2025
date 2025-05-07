@@ -102,9 +102,10 @@ export default function Feed() {
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map((post) => (
-            <PostItem key={post.id} post={post} />
-          ))}
+          {posts.map((post) => {
+            console.log("Rendering post with ID:", post.id);
+            return <PostItem key={post.id} post={post} />;
+          })}
 
           {/* Intersection Observer Target - place after loaded posts */}
           {posts.length > 0 && hasMore && (

@@ -10,7 +10,7 @@ export async function GET(request) {
 
   try {
     // Query for posts with user info
-    const query = `
+     const query = `
       SELECT 
         p.id, 
         p.content, 
@@ -25,10 +25,11 @@ export async function GET(request) {
       JOIN users u ON p.user_id = u.id
       WHERE p.is_public = 1
       ORDER BY p.created_at DESC 
-      LIMIT 10 OFFSET 0
+      LIMIT ? OFFSET ?
     `;
 
-    const posts = await executeQuery(query); // No parameters
+    // Pass parameters as array - order matters!
+    const posts = await executeQuery(query, [limit, offset]);
 
     // Important: Make sure these are actual numbers, not strings
     const queryParams = [Number(limit), Number(offset)];
