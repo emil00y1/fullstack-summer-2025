@@ -23,6 +23,10 @@ export default function PostItem({ post }) {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [reposted, setReposted] = useState(false);
+  const [repostCount, setRepostCount] = useState(0);
+  const [isReposting, setIsReposting] = useState(false);
+
 
   // Load comments immediately when component mounts
   useEffect(() => {
@@ -88,6 +92,32 @@ export default function PostItem({ post }) {
       setIsLiking(false);
     }
   };
+
+  const handleRepost = async () => {
+  if (isReposting) return;
+
+  setIsReposting(true);
+  try {
+    // In a real app, you'd make an API call here
+    setReposted(!reposted);
+    setRepostCount(reposted ? repostCount - 1 : repostCount + 1);
+    
+    toast(reposted ? "Post unreposted" : "Post reposted", {
+      description: reposted 
+        ? "You've removed your repost" 
+        : "You've reposted this post",
+      duration: 1500,
+    });
+  } catch (error) {
+    console.error("Error toggling repost:", error);
+    toast("Error", {
+      description: "Failed to repost. Please try again.",
+      type: "error",
+    });
+  } finally {
+    setIsReposting(false);
+  }
+};
 
   const loadComments = async () => {
     if (comments.length === 0 && !isLoading) {
@@ -208,87 +238,99 @@ export default function PostItem({ post }) {
             <p className="text-base">{post.content}</p>
           </div>
 
-          {/* Engagement stats */}
-          <div className="flex justify-between mt-4 text-gray-500 text-sm">
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="comments" className="border-none">
-                <AccordionTrigger
-                  className="p-0 hover:no-underline"
-                  onClick={loadComments}
-                >
-                  <div className="flex items-center">
-                    <MessageCircle size={18} />
-                    <span className="ml-2">{post.comment_count}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="mt-4 space-y-4">
-                    {isLoading ? (
-                      <p className="text-sm text-gray-500">
-                        Loading comments...
-                      </p>
-                    ) : comments.length > 0 ? (
-                      comments.map((comment) => (
-                        <div
-                          key={comment.id}
-                          className="flex gap-2 border-t pt-3"
-                        >
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.username}`}
-                            />
-                            <AvatarFallback>
-                              {comment.username.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="flex items-center">
-                              <span className="font-bold text-sm">
-                                {comment.username}
-                              </span>
-                              <span className="text-gray-500 text-xs ml-2">
-                                {formatDate(comment.created_at)}
-                              </span>
+        {/* Engagement stats - MODIFIED LAYOUT */}
+        <div className="mt-4">
+          {/* Fixed interaction bar */}
+          <div className="flex items-start text-gray-500 text-sm">
+            {/* Left side: Comment button with accordion trigger */}
+            <div className="w-1/2">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="comments" className="border-none">
+                  <AccordionTrigger 
+                    className="p-0 hover:no-underline flex items-center"
+                    onClick={loadComments}
+                  >
+                    <div className="flex items-center">
+                      <MessageCircle size={18} />
+                      <span className="ml-2">{post.comment_count}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="mt-3 space-y-4 border-t pt-3">
+                      {/* Comments section (unchanged) */}
+                      {isLoading ? (
+                        <p className="text-sm text-gray-500">
+                          Loading comments...
+                        </p>
+                      ) : comments.length > 0 ? (
+                        comments.map((comment) => (
+                          <div key={comment.id} className="flex gap-2 border-t pt-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage
+                                src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.username}`}
+                              />
+                              <AvatarFallback>
+                                {comment.username.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="flex items-center">
+                                <span className="font-bold text-sm">
+                                  {comment.username}
+                                </span>
+                                <span className="text-gray-500 text-xs ml-2">
+                                  {formatDate(comment.created_at)}
+                                </span>
+                              </div>
+                              <p className="text-sm">{comment.content}</p>
                             </div>
-                            <p className="text-sm">{comment.content}</p>
                           </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">No comments yet.</p>
-                    )}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            <div className="flex items-center">
-              <Repeat2 size={18} />
-              <span className="ml-2">0</span>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500">No comments yet.</p>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+    
+          {/* Right side: Other buttons */}
+          <div className="w-1/2 flex justify-end space-x-8">
+            {/* Repost button */}
+            <div className="flex">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`flex items-start p-0 hover:bg-transparent ${reposted ? "text-green-500" : ""}`}
+                onClick={handleRepost}
+                disabled={isReposting}
+              >
+                <Repeat2 
+                  size={18} 
+                  className={`${reposted ? "fill-current" : ""} transition-colors hover:text-green-400`}
+                />
+              </Button>
+              <span className="ml-2">{repostCount}</span>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`flex items-center p-0 ${liked ? "text-red-500" : ""}`}
-              onClick={handleLike}
-              disabled={isLiking}
-            >
-              <Heart size={18} className={liked ? "fill-current" : ""} />
+            {/* Like button */}
+            <div className="flex">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-start p-0 hover:bg-transparent"
+                onClick={handleLike}
+                disabled={isLiking}
+              >
+                <Heart 
+                  size={18} 
+                  className={`${liked ? "fill-current text-red-500" : ""} transition-colors hover:text-red-400`}
+                />
+              </Button>
               <span className="ml-2">{likeCount}</span>
-            </Button>
-
-            <div className="flex items-center">
-              <BarChart2 size={18} />
-              <span className="ml-2">0</span>
             </div>
-
-            <div className="flex items-center">
-              <Bookmark size={18} />
-            </div>
-
-            <div className="flex items-center">
-              <Share size={18} />
+          </div>
             </div>
           </div>
         </div>
