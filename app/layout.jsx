@@ -31,8 +31,8 @@ export default function RootLayout({ children }) {
           disableTransitionOnChange
         >
           <ThemeWrapper>
-            <div className="max-w-5xl grid grid-cols-[auto_1fr_auto] mx-auto">
-              <header>
+            <div className="max-w-5xl flex">
+              <header className="max-w-2xl w-full">
                 <SidebarProvider>
                   <SideBar />
                 </SidebarProvider>

@@ -51,7 +51,7 @@ const data = [
 export function SideBar({ ...props }) {
 
   return (
-    <Sidebar {...props} className="max-w-[275px]">
+    <Sidebar {...props} className="fixed">
       <SidebarHeader className="p-1"></SidebarHeader>
       <SidebarContent className="p-1">
         <SidebarMenu className="flex flex-col gap-3">
