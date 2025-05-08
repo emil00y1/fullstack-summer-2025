@@ -1,7 +1,6 @@
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -14,20 +13,12 @@ import {
   Bell,
   Mail,
   User,
-  MoreHorizontal,
-  LogOut,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+
 import Logo from "./Logo";
+import SidebarProfileFooter from "./SideBarProfileFooter";
 
 const data = [
   {
@@ -58,6 +49,7 @@ const data = [
 ];
 
 export function SideBar({ ...props }) {
+
   return (
     <Sidebar {...props} className="max-w-[275px]">
       <SidebarHeader className="p-1"></SidebarHeader>
@@ -99,35 +91,10 @@ export function SideBar({ ...props }) {
           </Button>
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild className="cursor-pointer">
-            <button className="w-full flex items-center justify-between p-2 rounded-full hover:bg-gray-100 dark:hover:bg-input/50 transition-colors focus:outline-none">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="Profile"
-                  />
-                  <AvatarFallback>A</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col items-start">
-                  <span className="font-medium text-sm">Emil</span>
-                  <span className="text-gray-500 text-xs">@emilkristensen</span>
-                </div>
-              </div>
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem className="cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarFooter>
+      <SidebarProfileFooter/>
       <SidebarRail />
     </Sidebar>
   );
 }
+
+export default SideBar;

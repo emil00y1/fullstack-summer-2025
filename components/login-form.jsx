@@ -26,101 +26,67 @@ import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
-// Client-side validation schema
+// Client-side validation schema (matches server-side validation)
 const formSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 })
 
-export function SignUpForm({ className, ...props }) {
+export function LoginForm({ className, ...props }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl")
   const [isLoading, setIsLoading] = useState(false)
-  const [serverError, setServerError] = useState("")
+  
+  // Get error from URL if present
+  const error = searchParams.get("error")
+  const errorMessage = error === "CredentialsSignin" 
+    ? "Invalid email or password" 
+    : error 
+      ? "An error occurred during sign in" 
+      : ""
   
   // Initialize form
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
       email: "",
       password: "",
     },
   })
 
-  // Form submission handler
-  async function onSubmit(values) {
+  // Form submission handler - let NextAuth handle validation
+  async function onSubmit(values, e) {
     setIsLoading(true)
-    setServerError("")
     
-    try {
-      // Post user data to your API endpoint
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      })
-      
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to sign up")
-      }
-      
-      // If signup is successful, sign in the user
-      await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: true,
-        callbackUrl: callbackUrl || "/"
-      })
-    } catch (error) {
-      setServerError(error.message)
-      setIsLoading(false)
-    }
+    // Send to NextAuth for server-side validation & authentication
+    // We let NextAuth handle the redirect with errors in the URL
+    await signIn("credentials", {
+      email: values.email,
+      password: values.password,
+      redirect: true,
+      callbackUrl: callbackUrl
+    })
   }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
-            Enter your details below to create your account
+            Enter your email below to login to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {serverError && (
+          {errorMessage && (
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {serverError}
+              {errorMessage}
             </div>
           )}
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem className="grid gap-2">
-                    <FormLabel htmlFor="username">Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="username"
-                        type="text" 
-                        disabled={isLoading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
               <FormField
                 control={form.control}
                 name="email"
@@ -131,7 +97,7 @@ export function SignUpForm({ className, ...props }) {
                       <Input
                         id="email"
                         type="email" 
-                        placeholder="email@example.com"
+                        placeholder="m@example.com"
                         disabled={isLoading}
                         {...field}
                       />
@@ -146,7 +112,15 @@ export function SignUpForm({ className, ...props }) {
                 name="password"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
-                    <FormLabel htmlFor="password">Password</FormLabel>
+                    <div className="flex items-center">
+                      <FormLabel htmlFor="password">Password</FormLabel>
+                      <Link
+                        href="#"
+                        className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                      >
+                        Forgot your password?
+                      </Link>
+                    </div>
                     <FormControl>
                       <Input 
                         id="password" 
@@ -165,7 +139,7 @@ export function SignUpForm({ className, ...props }) {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? "Creating account..." : "Sign Up"}
+                {isLoading ? "Signing in..." : "Login"}
               </Button>
               
               <div className="relative my-2">
@@ -186,13 +160,13 @@ export function SignUpForm({ className, ...props }) {
                 onClick={() => signIn("google", { callbackUrl })}
                 disabled={isLoading}
               >
-                Sign up with Google
+                Login with Google
               </Button>
             
               <div className="mt-4 text-center text-sm">
-                Already have an account?{" "}
-                <Link href="/login" className="underline underline-offset-4">
-                  Login
+                Don&apos;t have an account?{" "}
+                <Link href="/signup" className="underline underline-offset-4">
+                  Sign up
                 </Link>
               </div>
             </form>

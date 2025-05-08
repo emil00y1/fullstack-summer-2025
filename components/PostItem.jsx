@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner"; // Changed from "@/components/ui/sonner" to "sonner"
 import {
   Heart,
   MessageCircle,
   Repeat2,
-  BarChart2,
-  Bookmark,
-  Share,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -27,7 +24,6 @@ export default function PostItem({ post }) {
   const [repostCount, setRepostCount] = useState(0);
   const [isReposting, setIsReposting] = useState(false);
 
-
   // Load comments immediately when component mounts
   useEffect(() => {
     (async () => {
@@ -42,10 +38,8 @@ export default function PostItem({ post }) {
         }
       } catch (error) {
         console.error("Error loading comments:", error);
-        toast("Error", {
-          description: "Failed to load comments. Please try again.",
-          type: "error",
-        });
+        // Updated toast usage for Sonner
+        toast.error("Failed to load comments. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -57,13 +51,11 @@ export default function PostItem({ post }) {
 
     setIsLiking(true);
     try {
-      // In a real app, you'd get userId from authentication context
       const response = await fetch(`/api/posts/${post.id}/like`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        // Remove hardcoded ID and let the backend determine the user
         body: JSON.stringify({}),
       });
 
@@ -72,52 +64,59 @@ export default function PostItem({ post }) {
         setLiked(data.liked);
         setLikeCount(data.likeCount);
 
-        toast(data.liked ? "Post liked" : "Post unliked", {
-          description: data.liked
-            ? "You've liked this post"
-            : "You've removed your like from this post",
-          duration: 1500,
-        });
+        // Updated toast usage for Sonner
+        if (data.liked) {
+          toast.success("Post liked", {
+            description: "You've liked this post",
+            duration: 1500,
+          });
+        } else {
+          toast("Post unliked", {
+            description: "You've removed your like from this post",
+            duration: 1500,
+          });
+        }
       } else {
         const error = await response.json();
         throw new Error(error.message || "Failed to toggle like");
       }
     } catch (error) {
       console.error("Error toggling like:", error);
-      toast("Error", {
-        description: "Failed to like post. Please try again.",
-        type: "error",
-      });
+      // Updated toast usage for Sonner
+      toast.error("Failed to like post. Please try again.");
     } finally {
       setIsLiking(false);
     }
   };
 
   const handleRepost = async () => {
-  if (isReposting) return;
+    if (isReposting) return;
 
-  setIsReposting(true);
-  try {
-    // In a real app, you'd make an API call here
-    setReposted(!reposted);
-    setRepostCount(reposted ? repostCount - 1 : repostCount + 1);
-    
-    toast(reposted ? "Post unreposted" : "Post reposted", {
-      description: reposted 
-        ? "You've removed your repost" 
-        : "You've reposted this post",
-      duration: 1500,
-    });
-  } catch (error) {
-    console.error("Error toggling repost:", error);
-    toast("Error", {
-      description: "Failed to repost. Please try again.",
-      type: "error",
-    });
-  } finally {
-    setIsReposting(false);
-  }
-};
+    setIsReposting(true);
+    try {
+      setReposted(!reposted);
+      setRepostCount(reposted ? repostCount - 1 : repostCount + 1);
+      
+      // Updated toast usage for Sonner
+      if (!reposted) {
+        toast.success("Post reposted", {
+          description: "You've reposted this post",
+          duration: 1500,
+        });
+      } else {
+        toast("Post unreposted", {
+          description: "You've removed your repost",
+          duration: 1500,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling repost:", error);
+      // Updated toast usage for Sonner
+      toast.error("Failed to repost. Please try again.");
+    } finally {
+      setIsReposting(false);
+    }
+  };
 
   const loadComments = async () => {
     if (comments.length === 0 && !isLoading) {

@@ -1,4 +1,5 @@
 const mysql = require("mysql2/promise");
+const bcrypt = require('bcrypt');
 require("dotenv").config();
 
 async function seed() {
@@ -59,6 +60,7 @@ async function seed() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) NOT NULL,
         email VARCHAR(100) NOT NULL,
+        password VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -124,18 +126,19 @@ async function seed() {
 
     // Insert sample users (10 users)
     console.log("Inserting sample users...");
+    const hashedPassword = await bcrypt.hash('password', 10);
     await connection.execute(`
-      INSERT INTO users (username, email) VALUES
-      ('john_doe', 'john@example.com'),
-      ('jane_smith', 'jane@example.com'),
-      ('bob_johnson', 'bob@example.com'),
-      ('alice_green', 'alice@example.com'),
-      ('mike_brown', 'mike@example.com'),
-      ('sara_wilson', 'sara@example.com'),
-      ('tom_davis', 'tom@example.com'),
-      ('emily_jones', 'emily@example.com'),
-      ('dave_miller', 'dave@example.com'),
-      ('lisa_taylor', 'lisa@example.com')
+      INSERT INTO users (username, email, password) VALUES
+      ('john_doe', 'john@example.com', '${hashedPassword}'),
+      ('jane_smith', 'jane@example.com', '${hashedPassword}'),
+      ('bob_johnson', 'bob@example.com', '${hashedPassword}'),
+      ('alice_green', 'alice@example.com', '${hashedPassword}'),
+      ('mike_brown', 'mike@example.com', '${hashedPassword}'),
+      ('sara_wilson', 'sara@example.com', '${hashedPassword}'),
+      ('tom_davis', 'tom@example.com', '${hashedPassword}'),
+      ('emily_jones', 'emily@example.com', '${hashedPassword}'),
+      ('dave_miller', 'dave@example.com', '${hashedPassword}'),
+      ('lisa_taylor', 'lisa@example.com', '${hashedPassword}')
     `);
 
     // Generate sample posts (100 posts)
