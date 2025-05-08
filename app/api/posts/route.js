@@ -1,16 +1,16 @@
 // app/api/posts/route.js
 import { NextResponse } from "next/server";
 import { executeQuery } from "@/lib/db";
+import { auth } from "@/auth";
 
 export async function GET(request) {
-  // Get query parameters
+  // Your existing GET function remains the same
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get("limit") || 10);
   const offset = parseInt(searchParams.get("offset") || 0);
 
   try {
-    // Query for posts with user info
-     const query = `
+    const query = `
       SELECT 
         p.id, 
         p.content, 
@@ -28,23 +28,65 @@ export async function GET(request) {
       LIMIT ? OFFSET ?
     `;
 
-    // Pass parameters as array - order matters!
     const posts = await executeQuery(query, [limit, offset]);
 
-    // Important: Make sure these are actual numbers, not strings
-    const queryParams = [Number(limit), Number(offset)];
-
-    // Debugging
-    console.log("Query params:", queryParams);
-
-    // const posts = await executeQuery(query, queryParams);
-
-    // Return the posts
     return NextResponse.json({ posts });
   } catch (error) {
     console.error("Error fetching posts:", error);
     return NextResponse.json(
       { error: "Failed to fetch posts", message: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request) {
+  try {
+    // Verify authentication using the auth() function from @/auth
+    const session = await auth();
+    
+    if (!session || !session.user || !session.user.id) {
+      return NextResponse.json(
+        { error: "Unauthorized - You must be logged in to create a post" },
+        { status: 401 }
+      );
+    }
+    
+    // Get data from request body
+    const data = await request.json();
+    
+    // Validate required fields
+    if (!data.content) {
+      return NextResponse.json(
+        { error: "Missing required content" },
+        { status: 400 }
+      );
+    }
+    
+    // Get user ID from session
+    const userId = session.user.id;
+    
+    // Insert into database
+    const query = `
+      INSERT INTO posts (content, user_id, is_public, created_at) 
+      VALUES (?, ?, ?, NOW())
+    `;
+    
+    await executeQuery(query, [
+      data.content,
+      userId,
+      1  // Default to public
+    ]);
+    
+    // Just return a success message without the query result
+    return NextResponse.json({ 
+      success: true, 
+      message: "Post created successfully"
+    });
+  } catch (error) {
+    console.error("Error creating post:", error);
+    return NextResponse.json(
+      { error: "Failed to create post", message: error.message },
       { status: 500 }
     );
   }

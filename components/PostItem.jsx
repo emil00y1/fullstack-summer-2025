@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner"; // Changed from "@/components/ui/sonner" to "sonner"
+import { toast } from "sonner";
 import {
   Heart,
   MessageCircle,
