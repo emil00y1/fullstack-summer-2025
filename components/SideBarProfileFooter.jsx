@@ -14,6 +14,7 @@ import {
 } from "./ui/dropdown-menu";
 import { auth, signOut } from "@/auth"
 import { Button } from "./ui/button";
+import { ThemeToggle } from "./ThemeToggle";
 
 
 export default async function SidebarProfileFooter(){
@@ -48,17 +49,19 @@ export default async function SidebarProfileFooter(){
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem className="p-0">
-                 <form className="w-full h-full"
-                    action={async () => {
-                        "use server"
-                        await signOut()
-                    }}
-                    >
-                        
-                        <Button type="submit" variant="ghost" className="cursor-pointer w-full h-full justify-start"><LogOut className="mr-2 h-4 w-4" /><span>Sign Out</span></Button>
-                </form>
-              </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <ThemeToggle />
+                </DropdownMenuItem>
+                <DropdownMenuItem className="p-0">
+                    <form className="w-full h-full"
+                        action={async () => {
+                            "use server"
+                            await signOut()
+                        }}
+                        >
+                            <Button type="submit" variant="ghost" className="cursor-pointer w-full h-full justify-start"><LogOut className="mr-2 h-4 w-4" /><span>Sign Out</span></Button>
+                    </form>
+                </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
