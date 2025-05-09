@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 import { SideBar } from "@/components/SideBar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import SidebarRight from "@/components/ui/SidebarRight";
 import { Toaster } from "sonner";
 
 const libreFranklin = Libre_Franklin({
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
                 </SidebarProvider>
               </header>
               {children}
+              <SidebarRight />
             </div>
             <Toaster />
           </ThemeWrapper>
