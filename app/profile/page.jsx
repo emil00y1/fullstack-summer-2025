@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ClientTabs from "./ClientTabs";
 import Link from "next/link";
+import { executeQuery } from "@/lib/db";
 
 export default async function ProfilePage() {
   // Get session using auth()
@@ -18,15 +19,94 @@ export default async function ProfilePage() {
   
   const userId = session.user.id;
   
-  // Fetch user posts
-  const postsResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/users/${userId}/posts`);
-  const postsData = await postsResponse.json();
-  const posts = postsData.posts || [];
+  // Fetch user posts directly from the database instead of using API route
+  // This ensures we're using the exact same userId from the session
+  const posts = await executeQuery(
+    `SELECT 
+      p.id, 
+      p.content, 
+      p.created_at, 
+      p.is_public,
+      u.id as user_id, 
+      u.username,
+      u.email,
+      (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as like_count,
+      (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
+    FROM posts p
+    JOIN users u ON p.user_id = u.id
+    WHERE p.user_id = ?
+    ORDER BY p.created_at DESC`,
+    [userId]
+  );
   
-  // Fetch user comments
-  const commentsResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/users/${userId}/comments`);
-  const commentsData = await commentsResponse.json();
-  const comments = commentsData.comments || [];
+  // Format posts to match the expected structure
+  const formattedPosts = posts.map(post => ({
+    id: post.id,
+    body: post.content,
+    createdAt: post.created_at,
+    userId: post.user_id,
+    likesCount: post.like_count,
+    commentsCount: post.comment_count,
+    isPublic: post.is_public === 1,
+    user: {
+      id: post.user_id,
+      username: post.username,
+      name: post.username, // Use username as name
+      email: post.email,
+      image: null
+    },
+    comments: [],
+    likes: []
+  }));
+  
+  // Fetch user comments directly from database
+  const comments = await executeQuery(
+    `SELECT 
+      c.id, 
+      c.content as body, 
+      c.created_at, 
+      c.user_id,
+      c.post_id,
+      u.username,
+      u.email,
+      p.content as post_content,
+      pu.username as post_username,
+      pu.id as post_user_id,
+      (SELECT COUNT(*) FROM likes WHERE post_id = c.id) as like_count
+    FROM comments c
+    JOIN users u ON c.user_id = u.id
+    JOIN posts p ON c.post_id = p.id
+    JOIN users pu ON p.user_id = pu.id
+    WHERE c.user_id = ?
+    ORDER BY c.created_at DESC`,
+    [userId]
+  );
+  
+  // Format comments
+  const formattedComments = comments.map(comment => ({
+    id: comment.id,
+    body: comment.body,
+    createdAt: comment.created_at,
+    userId: comment.user_id,
+    postId: comment.post_id,
+    likesCount: comment.like_count || 0,
+    user: {
+      id: comment.user_id,
+      username: comment.username,
+      name: comment.username,
+      email: comment.email,
+      image: null
+    },
+    post: {
+      id: comment.post_id,
+      body: comment.post_content,
+      user: {
+        id: comment.post_user_id,
+        username: comment.post_username
+      }
+    },
+    likes: []
+  }));
   
   // User data from session
   const userData = session.user;
@@ -35,17 +115,17 @@ export default async function ProfilePage() {
   const username = userData?.username || userData?.email?.split("@")[0] || "user";
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-xl mx-auto min-w-[450px]">
       {/* Header */}
       <div className="flex items-center p-4 border-b">
-        <Link href="/" className="mr-6">
-          <Button variant="ghost">
+        <Link href="/" className="mr-6 ">
+          <Button variant="ghost" className="cursor-pointer">
             ←
           </Button>
         </Link>
         <div>
-          <h1 className="text-xl font-bold">{userData?.name || "My Profile"}</h1>
-          <p className="text-gray-500 text-sm">{posts.length} posts</p>
+          <h1 className="text-xl font-bold">{userData?.name || username}</h1>
+          <p className="text-gray-500 text-sm">{formattedPosts.length} posts</p>
         </div>
       </div>
       
@@ -71,7 +151,7 @@ export default async function ProfilePage() {
               className="w-full h-full object-cover"
             />
             <AvatarFallback className="text-2xl">
-              {userData?.name?.[0]?.toUpperCase() || "U"}
+              {userData?.name?.[0]?.toUpperCase() || username[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -88,7 +168,7 @@ export default async function ProfilePage() {
       
       {/* Profile info */}
       <div className="mt-14 px-4">
-        <h2 className="font-bold text-xl">{userData?.name}</h2>
+        <h2 className="font-bold text-xl">{userData?.name || username}</h2>
         <p className="text-gray-500">@{username}</p>
         
         {/* Bio */}
@@ -121,7 +201,7 @@ export default async function ProfilePage() {
       </div>
       
       {/* Tabs using client component wrapper */}
-      <ClientTabs posts={posts} comments={comments} />
+      <ClientTabs posts={formattedPosts} comments={formattedComments} />
     </div>
   );
 }

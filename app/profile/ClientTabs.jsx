@@ -11,13 +11,12 @@ export default function ClientTabs({ posts, comments }) {
   return (
     <Tabs 
       defaultValue="posts" 
-      className="mt-6"
+      className="mt-6 px-4"
       onValueChange={setActiveTab}
     >
-      <TabsList className="w-full border-b">
+      <TabsList className="w-full border-b bg-transparent">
         <TabsTrigger value="posts" className="flex-1">Posts</TabsTrigger>
         <TabsTrigger value="comments" className="flex-1">Comments</TabsTrigger>
-        <TabsTrigger value="media" className="flex-1">Media</TabsTrigger>
         <TabsTrigger value="likes" className="flex-1">Likes</TabsTrigger>
       </TabsList>
       
@@ -52,10 +51,6 @@ export default function ClientTabs({ posts, comments }) {
                 </div>
             )}
         </TabsContent>
-      
-      <TabsContent value="media" className="p-8 text-center text-gray-500">
-        Media content will appear here
-      </TabsContent>
       
       <TabsContent value="likes" className="p-8 text-center text-gray-500">
         Liked content will appear here
