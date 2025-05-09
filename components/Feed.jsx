@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import PostItem from "./PostItem";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SessionProvider } from "next-auth/react";
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
@@ -29,9 +30,35 @@ export default function Feed() {
       }
 
       const data = await response.json();
+      console.log("Raw API response:", data);
 
       // Check if data.posts exists and is an array
       const fetchedPosts = Array.isArray(data.posts) ? data.posts : [];
+
+      // Transform the fetched posts to match the expected format for PostItem
+      const formattedPosts = fetchedPosts.map(post => {
+        return {
+          id: post.id,
+          body: post.content,            // Convert 'content' to 'body' expected by PostItem
+          createdAt: post.created_at,    // Convert 'created_at' to 'createdAt'
+          userId: post.user_id,          // Map 'user_id' to 'userId'
+          likesCount: post.like_count,   // Map 'like_count' to 'likesCount'
+          commentsCount: post.comment_count, // Map 'comment_count' to 'commentsCount'
+          isPublic: post.is_public === 1, // Convert 'is_public' to boolean
+          user: {
+            id: post.user_id,
+            username: post.username,
+            email: post.email,
+            name: post.username,         // Use username as name if name is not provided
+            image: null                  // Default image to null if not provided
+          },
+          // Add empty arrays for these properties that PostItem expects
+          comments: [],
+          likes: []
+        };
+      });
+
+      console.log("Formatted posts:", formattedPosts);
 
       // Set hasMore flag based on returned posts count
       if (fetchedPosts.length < limit) {
@@ -39,10 +66,10 @@ export default function Feed() {
       }
 
       if (reset) {
-        setPosts(fetchedPosts);
+        setPosts(formattedPosts);
         setOffset(limit);
       } else {
-        setPosts((prevPosts) => [...prevPosts, ...fetchedPosts]);
+        setPosts((prevPosts) => [...prevPosts, ...formattedPosts]);
         setOffset(offset + limit);
       }
     } catch (error) {
@@ -101,10 +128,12 @@ export default function Feed() {
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map((post) => {
-            console.log("Rendering post with ID:", post.id);
-            return <PostItem key={post.id} post={post} />;
-          })}
+          <SessionProvider>
+            {posts.map((post) => {
+              console.log("Rendering post with ID:", post.id);
+              return <PostItem key={post.id} post={post} />;
+            })}
+          </SessionProvider>
 
           {/* Intersection Observer Target - place after loaded posts */}
           {posts.length > 0 && hasMore && (
