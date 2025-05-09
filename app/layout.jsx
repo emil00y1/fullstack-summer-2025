@@ -6,6 +6,7 @@ import { SideBar } from "@/components/SideBar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import SidebarRight from "@/components/SidebarRight";
 import { Toaster } from "sonner";
+import { SessionProvider } from "next-auth/react";
 
 const libreFranklin = Libre_Franklin({
   variable: "--font-libre-franklin",
@@ -38,7 +39,7 @@ export default function RootLayout({ children }) {
                   <SideBar />
                 </SidebarProvider>
               </header>
-              {children}
+              <SessionProvider>{children}</SessionProvider>
               <SidebarRight />
             </div>
             <Toaster />
