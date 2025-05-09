@@ -67,24 +67,27 @@ export function CreatePost() {
     <div className="w-full max-w-xl bg-white dark:bg-gray-950 rounded-xl p-4">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage 
-              src={session?.user?.image || "/avatar-placeholder.png"} 
-              alt={session?.user?.name || "Profile"} 
-            />
-            <AvatarFallback>
-              {session?.user?.name?.charAt(0) || "U"}
-            </AvatarFallback>
-          </Avatar>
+          
           
           <div className="flex-1 flex flex-col gap-3">
-            <Textarea
-              value={post}
-              onChange={(e) => setPost(e.target.value)}
-              placeholder={status === "authenticated" ? "What's happening?" : "Sign in to post"}
-              disabled={status !== "authenticated"}
-              className="min-h-24 text-base resize-none border-none focus-visible:ring-0 p-0 placeholder:text-gray-500"
-            />
+          <div className="flex items-start gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage 
+                src={session?.user?.image || "/avatar-placeholder.png"} 
+                alt={session?.user?.name || "Profile"} 
+              />
+              <AvatarFallback>
+                {session?.user?.name?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+              <Textarea
+                value={post}
+                onChange={(e) => setPost(e.target.value)}
+                placeholder={status === "authenticated" ? "What's happening?" : "Sign in to post"}
+                disabled={status !== "authenticated"}
+                className="min-h-24 text-base resize-none border-none focus-visible:ring-0 p-0 placeholder:text-gray-500"
+              />
+          </div>
             
             <Separator className="my-2" />
             

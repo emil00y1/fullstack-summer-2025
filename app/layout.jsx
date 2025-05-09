@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 import { SideBar } from "@/components/SideBar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import SidebarRight from "@/components/ui/SidebarRight";
+import SidebarRight from "@/components/SidebarRight";
 import { Toaster } from "sonner";
 
 const libreFranklin = Libre_Franklin({
@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
       className={`${libreFranklin.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="overflow-x-hidden">
+      <body className="overflow-x-hidden flex justify-center">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -33,7 +33,7 @@ export default function RootLayout({ children }) {
         >
           <ThemeWrapper>
             <div className="max-w-5xl flex">
-              <header className="max-w-2xl w-full">
+              <header className="">
                 <SidebarProvider>
                   <SideBar />
                 </SidebarProvider>
