@@ -4,6 +4,7 @@ import {
 import {
   MoreHorizontal,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
@@ -66,7 +67,18 @@ export default async function SidebarProfileFooter(){
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Link href="/login" className="text-center text-gray-500">Log In</Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild className="cursor-pointer">
+              <button>
+                <Settings/>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+                <DropdownMenuItem>
+                    <ThemeToggle />
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </SidebarFooter>
 )}
