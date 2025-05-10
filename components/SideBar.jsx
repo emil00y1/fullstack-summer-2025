@@ -54,7 +54,7 @@ export function SideBar({ ...props }) {
     <Sidebar {...props} className="fixed">
       <SidebarHeader className="p-1"></SidebarHeader>
       <SidebarContent className="p-1">
-        <SidebarMenu className="flex flex-col gap-3">
+        <SidebarMenu className="flex flex-col gap-4">
           <SidebarMenuItem>
             <SidebarMenuButton className="hover:bg-transparent">
               <Link href="/" className="p-1">
@@ -74,7 +74,7 @@ export function SideBar({ ...props }) {
                 <SidebarMenuButton
                   asChild
                   isActive={item.isActive}
-                  className="text-base p-3 rounded-3xl"
+                  className="text-lg p-3 rounded-3xl"
                 >
                   <Link href={item.url} className="py-4">
                     <div className="w-5 h-5 flex items-center justify-center mr-2">
@@ -86,7 +86,7 @@ export function SideBar({ ...props }) {
               </SidebarMenuItem>
             );
           })}
-          <Button className="rounded-3xl py-2 font-bold cursor-pointer mt-4">
+          <Button className="rounded-3xl font-bold cursor-pointer mt-4 max-w-52">
             Post
           </Button>
         </SidebarMenu>

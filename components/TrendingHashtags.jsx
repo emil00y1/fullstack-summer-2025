@@ -33,7 +33,7 @@ const TrendingHashtags = () => {
     ];
   
     return (
-      <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
+      <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-4">
         <h2 className="font-bold text-xl mb-4">Trends for you</h2>
         <div className="space-y-4">
           {trends.map(trend => (

@@ -4,6 +4,7 @@ import PostItem from "./PostItem";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SessionProvider } from "next-auth/react";
+import { CreatePost } from "./CreatePost";
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
@@ -116,12 +117,9 @@ export default function Feed() {
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
-          Refresh
-        </Button>
-      </div>
-
+      <SessionProvider>
+        <CreatePost/>
+      </SessionProvider>
       {posts.length === 0 && !isLoading ? (
         <div className="text-center py-8">
           <p className="text-gray-500">No posts found.</p>

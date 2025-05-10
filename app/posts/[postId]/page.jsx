@@ -7,6 +7,7 @@ import CommentForm from "./CommentForm";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { SessionProvider } from "next-auth/react";
+import BackButton from "@/components/BackButton";
 
 export default async function PostPage({ params }) {
   const { postId } = params;
@@ -109,9 +110,7 @@ export default async function PostPage({ params }) {
     <div className="max-w-xl mx-auto p-4">
       {/* Header */}
       <div className="flex items-center p-4 border-b">
-        <Link href="/">
-          <Button variant="ghost">←</Button>
-        </Link>
+      <BackButton href="/"/>
         <h1 className="text-xl font-bold ml-4">Post</h1>
       </div>
       

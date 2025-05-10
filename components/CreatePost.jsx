@@ -85,11 +85,11 @@ export function CreatePost() {
                 onChange={(e) => setPost(e.target.value)}
                 placeholder={status === "authenticated" ? "What's happening?" : "Sign in to post"}
                 disabled={status !== "authenticated"}
-                className="min-h-24 text-base resize-none border-none focus-visible:ring-0 p-0 placeholder:text-gray-500"
+                className="min-h-24 text-base resize-none border-none focus-visible:ring-0 p-0 placeholder:text-gray-500 p-2"
               />
           </div>
             
-            <Separator className="my-2" />
+            
             
             <div className="flex justify-between items-center">
               <div className="text-sm text-gray-500">
@@ -103,11 +103,12 @@ export function CreatePost() {
               <Button 
                 type="submit" 
                 disabled={status !== "authenticated" || post.length === 0 || post.length > MAX_CHARS || isSubmitting}
-                className="rounded-full bg-blue-500 hover:bg-blue-600 px-5"
+                className="rounded-full bg-blue-500 hover:bg-blue-600 px-5 cursor-pointer"
               >
                 {isSubmitting ? "Posting..." : "Post"}
               </Button>
             </div>
+            <Separator className="my-2" />
           </div>
         </div>
       </form>

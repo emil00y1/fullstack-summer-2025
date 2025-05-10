@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ClientTabs from "./ClientTabs";
 import Link from "next/link";
 import { executeQuery } from "@/lib/db";
+import BackButton from "@/components/BackButton";
 
 export default async function ProfilePage() {
   // Get session using auth()
@@ -118,11 +119,7 @@ export default async function ProfilePage() {
     <div className="max-w-xl mx-auto min-w-[450px]">
       {/* Header */}
       <div className="flex items-center p-4 border-b">
-        <Link href="/" className="mr-6 ">
-          <Button variant="ghost" className="cursor-pointer">
-            ←
-          </Button>
-        </Link>
+        <BackButton href="/"/>
         <div>
           <h1 className="text-xl font-bold">{userData?.name || username}</h1>
           <p className="text-gray-500 text-sm">{formattedPosts.length} posts</p>

@@ -1,12 +1,9 @@
-import { CreatePost } from "@/components/CreatePost";
 import Feed from "@/components/Feed";
-import { SessionProvider } from "next-auth/react";
 
 export default async function Page() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen pb-20 gap-16 font-[family-name:var(--font-geist-sans)]">
+    <div className="  min-h-screen pb-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <SessionProvider><CreatePost/></SessionProvider>
         <Feed />
       </main>
     </div>
