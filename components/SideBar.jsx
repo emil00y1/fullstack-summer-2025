@@ -1,24 +1,26 @@
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   Home,
   Search,
   Bell,
   Mail,
   User,
+  Menu,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 import Logo from "./Logo";
 import SidebarProfileFooter from "./SideBarProfileFooter";
+import { MobileSidebar } from "./MobileSidebar";
 
 const data = [
   {
@@ -49,10 +51,8 @@ const data = [
 ];
 
 export function SideBar({ ...props }) {
-
-  return (
-    <Sidebar {...props} className="fixed">
-      <SidebarHeader className="p-1"></SidebarHeader>
+  const MainSidebarContent = () => (
+    <>
       <SidebarContent className="p-1">
         <SidebarMenu className="flex flex-col gap-4">
           <SidebarMenuItem>
@@ -62,7 +62,7 @@ export function SideBar({ ...props }) {
                   height={20}
                   width={20}
                   alt="Y logo"
-                  className="fill-primary" // This sets colors for light/dark mode
+                  className="fill-primary"
                 />
               </Link>
             </SidebarMenuButton>
@@ -77,23 +77,40 @@ export function SideBar({ ...props }) {
                   className="text-lg p-3 rounded-3xl"
                 >
                   <Link href={item.url} className="py-4">
-                    <div className="w-5 h-5 flex items-center justify-center mr-2">
+                    <div className="w-5 h-5 flex items-center justify-center md:mr-2 lg:mr-2">
                       <IconComponent className="w-full h-full" />
                     </div>
-                    {item.title}
+                    <span className="lg:inline md:hidden">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
           })}
-          <Button className="rounded-3xl font-bold cursor-pointer mt-4 max-w-52">
-            Post
+          <Button className="rounded-3xl max-w-52 font-bold cursor-pointer mt-4 min-w-0 flex items-center justify-center md:w-12 md:h-12 md:p-0 lg:w-auto lg:h-auto lg:p-4 lg:max-w-52">
+            <span className="lg:inline md:hidden">Post</span>
+            <span className="hidden lg:hidden md:inline font-bold text-lg">+</span>
           </Button>
         </SidebarMenu>
       </SidebarContent>
-      <SidebarProfileFooter/>
-      <SidebarRail />
-    </Sidebar>
+      <SidebarProfileFooter />
+    </>
+  );
+
+  // For mobile view using Sheet component
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">
+        <Sidebar {...props} className="fixed w-16 lg:w-64 transition-all duration-300">
+          <MainSidebarContent />
+        </Sidebar>
+      </div>
+      
+      {/* Mobile view with burger menu - now using a client component */}
+      <MobileSidebar>
+        <MainSidebarContent />
+      </MobileSidebar>
+    </>
   );
 }
 

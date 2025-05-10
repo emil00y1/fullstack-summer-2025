@@ -34,7 +34,7 @@ export default function RootLayout({ children }) {
         >
           <ThemeWrapper>
             <div className="max-w-5xl flex">
-              <header className="">
+              <header className="transition-all duration-300 md:w-16 lg:w-64">
                 <SidebarProvider>
                   <SideBar />
                 </SidebarProvider>
