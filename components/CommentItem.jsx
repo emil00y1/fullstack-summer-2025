@@ -54,7 +54,7 @@ export default function CommentItem({ comment, showParentPost = false }) {
         <Link href={`/users/${comment.userId}`}>
           <Avatar className="h-10 w-10">
             <AvatarImage
-              src={comment.user?.image || "https://picsum.photos/200"}
+              src={comment.user?.avatar || "https://picsum.photos/200"}
               alt={comment.user?.name || "User"}
             />
             <AvatarFallback>

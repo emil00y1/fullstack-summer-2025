@@ -80,15 +80,15 @@ export function SideBar({ ...props }) {
                     <div className="w-5 h-5 flex items-center justify-center md:mr-2 lg:mr-2">
                       <IconComponent className="w-full h-full" />
                     </div>
-                    <span className="lg:inline md:hidden">{item.title}</span>
+                    <span className="lg:inline hidden">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
           })}
-          <Button className="rounded-3xl max-w-52 font-bold cursor-pointer mt-4 min-w-0 flex items-center justify-center md:w-12 md:h-12 md:p-0 lg:w-auto lg:h-auto lg:p-4 lg:max-w-52">
-            <span className="lg:inline md:hidden">Post</span>
-            <span className="hidden lg:hidden md:inline font-bold text-lg">+</span>
+          <Button className="rounded-3xl max-w-52 font-bold cursor-pointer mt-4 min-w-0 flex items-center justify-center w-12 h-12 p-0 lg:w-auto lg:h-auto lg:p-4 lg:max-w-52">
+            <span className="lg:inline hidden">Post</span>
+            <span className="lg:hidden inline font-bold text-lg">+</span>
           </Button>
         </SidebarMenu>
       </SidebarContent>
@@ -96,20 +96,13 @@ export function SideBar({ ...props }) {
     </>
   );
 
-  // For mobile view using Sheet component
   return (
     <>
       {/* Desktop sidebar */}
-      <div className="hidden md:block">
         <Sidebar {...props} className="fixed w-16 lg:w-64 transition-all duration-300">
           <MainSidebarContent />
         </Sidebar>
-      </div>
-      
-      {/* Mobile view with burger menu - now using a client component */}
-      <MobileSidebar>
-        <MainSidebarContent />
-      </MobileSidebar>
+
     </>
   );
 }

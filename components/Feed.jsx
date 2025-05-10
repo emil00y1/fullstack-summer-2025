@@ -51,7 +51,7 @@ export default function Feed() {
             username: post.username,
             email: post.email,
             name: post.username,         // Use username as name if name is not provided
-            image: null                  // Default image to null if not provided
+            avatar: post.avatar                 // Default image to null if not provided
           },
           // Add empty arrays for these properties that PostItem expects
           comments: [],

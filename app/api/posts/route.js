@@ -19,6 +19,7 @@ export async function GET(request) {
         u.id as user_id, 
         u.username,
         u.email,
+        u.avatar,
         (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as like_count,
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
       FROM posts p

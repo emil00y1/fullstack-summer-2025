@@ -45,7 +45,7 @@ const WhoToFollow = () => {
                   <p className="text-gray-500 text-sm">{user.handle}</p>
                 </div>
               </div>
-              <Button className="bg-black dark:bg-white text-white dark:text-black font-bold text-sm px-4 py-1 rounded-full">
+              <Button className="bg-black dark:bg-white text-white dark:text-black font-bold text-sm rounded-full">
                 Follow
               </Button>
             </div>

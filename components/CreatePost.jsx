@@ -64,7 +64,7 @@ export function CreatePost() {
   }
 
   return (
-    <div className="w-full max-w-xl bg-white dark:bg-gray-950 rounded-xl p-4">
+    <div className="w-full max-w-xl  rounded-xl px-1 py-2 md:p-4">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-3">
           
@@ -85,7 +85,7 @@ export function CreatePost() {
                 onChange={(e) => setPost(e.target.value)}
                 placeholder={status === "authenticated" ? "What's happening?" : "Sign in to post"}
                 disabled={status !== "authenticated"}
-                className="min-h-24 text-base resize-none border-none focus-visible:ring-0 p-0 placeholder:text-gray-500 p-2"
+                className="min-h-24 bg-accent text-base resize-none border-none focus-visible:ring-0 p-0 placeholder:text-gray-500 p-2"
               />
           </div>
             

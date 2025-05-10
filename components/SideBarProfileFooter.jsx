@@ -15,6 +15,7 @@ import {
 import { auth, signOut } from "@/auth"
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import Link from "next/link";
 
 
 export default async function SidebarProfileFooter(){
@@ -36,7 +37,7 @@ export default async function SidebarProfileFooter(){
                       {session.user?.name?.[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex md:hidden lg:flex flex-col items-start">
+                  <div className="hidden lg:flex flex-col items-start">
                     <span className="font-medium text-sm">
                       {session.user?.name}
                     </span>
@@ -65,7 +66,7 @@ export default async function SidebarProfileFooter(){
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <div className="text-center text-gray-500">Not logged in</div>
+          <Link href="/login" className="text-center text-gray-500">Log In</Link>
         )}
       </SidebarFooter>
 )}

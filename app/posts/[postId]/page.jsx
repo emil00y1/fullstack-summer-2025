@@ -23,6 +23,7 @@ export default async function PostPage({ params }) {
       u.id as user_id, 
       u.username,
       u.email,
+      u.avatar,
       (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as like_count,
       (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
     FROM posts p
@@ -61,10 +62,9 @@ export default async function PostPage({ params }) {
     user: {
       id: posts[0].user_id,
       username: posts[0].username,
-      // Use username as name since name column doesn't exist
+      avatar: posts[0].avatar,
       name: posts[0].username,
       email: posts[0].email,
-      image: null // No image in your schema
     },
     likes: []
   };
@@ -79,6 +79,7 @@ export default async function PostPage({ params }) {
       c.created_at, 
       u.username,
       u.email,
+      u.avatar,
       (SELECT COUNT(*) FROM likes WHERE post_id = c.id) as like_count
     FROM comments c
     JOIN users u ON c.user_id = u.id
@@ -98,10 +99,9 @@ export default async function PostPage({ params }) {
     user: {
       id: comment.user_id,
       username: comment.username,
-      // Use username as name since name column doesn't exist
       name: comment.username,
       email: comment.email,
-      image: null // No image in your schema
+      avatar: comment.avatar,  
     },
     likes: []
   }));

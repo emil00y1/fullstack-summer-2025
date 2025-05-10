@@ -53,7 +53,7 @@ async function seed() {
     await connection.execute("DROP TABLE IF EXISTS posts");
     await connection.execute("DROP TABLE IF EXISTS users");
 
-    // Create users table
+    // Create users table with avatar column
     console.log("Creating users table...");
     await connection.execute(`
       CREATE TABLE users (
@@ -61,6 +61,7 @@ async function seed() {
         username VARCHAR(50) NOT NULL,
         email VARCHAR(100) NOT NULL,
         password VARCHAR(255) NOT NULL,
+        avatar VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -124,30 +125,29 @@ async function seed() {
       "CREATE INDEX idx_comments_post_id ON comments(post_id)"
     );
 
-    // Insert sample users (10 users)
+    // Insert sample users (10 users) with avatar URLs
     console.log("Inserting sample users...");
     const hashedPassword = await bcrypt.hash('password', 10);
     await connection.execute(`
-      INSERT INTO users (username, email, password) VALUES
-      ('john_doe', 'john@example.com', '${hashedPassword}'),
-      ('jane_smith', 'jane@example.com', '${hashedPassword}'),
-      ('bob_johnson', 'bob@example.com', '${hashedPassword}'),
-      ('alice_green', 'alice@example.com', '${hashedPassword}'),
-      ('mike_brown', 'mike@example.com', '${hashedPassword}'),
-      ('sara_wilson', 'sara@example.com', '${hashedPassword}'),
-      ('tom_davis', 'tom@example.com', '${hashedPassword}'),
-      ('emily_jones', 'emily@example.com', '${hashedPassword}'),
-      ('dave_miller', 'dave@example.com', '${hashedPassword}'),
-      ('lisa_taylor', 'lisa@example.com', '${hashedPassword}')
+      INSERT INTO users (username, email, password, avatar) VALUES
+      ('john_doe', 'john@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=john_doe'),
+      ('jane_smith', 'jane@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=jane_smith'),
+      ('bob_johnson', 'bob@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=bob_johnson'),
+      ('alice_green', 'alice@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=alice_green'),
+      ('mike_brown', 'mike@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=mike_brown'),
+      ('sara_wilson', 'sara@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=sara_wilson'),
+      ('tom_davis', 'tom@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=tom_davis'),
+      ('emily_jones', 'emily@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=emily_jones'),
+      ('dave_miller', 'dave@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=dave_miller'),
+      ('lisa_taylor', 'lisa@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=lisa_taylor')
     `);
 
     // Generate sample posts (100 posts)
     console.log("Inserting sample posts...");
-
     const sampleContents = [
       "Just had an amazing cup of coffee!",
       "Working on a new project today.",
-      "Can\\'t wait for the weekend!", // Note the escaped apostrophe
+      "Can\\'t wait for the weekend!",
       "Thinking about learning a new programming language.",
       "Just finished an interesting book about web development.",
       "Having a great day at the beach.",
@@ -157,14 +157,11 @@ async function seed() {
       "Excited about the upcoming tech conference.",
     ];
 
-    // Insert posts one at a time to avoid string escaping issues
     for (let i = 0; i < 100; i++) {
-      const userId = Math.floor(Math.random() * 10) + 1; // Random user ID between 1-10
+      const userId = Math.floor(Math.random() * 10) + 1;
       const contentIndex = i % sampleContents.length;
-      const isPublic = Math.random() > 0.1 ? 1 : 0; // 90% of posts are public (using 1/0 instead of true/false)
-
+      const isPublic = Math.random() > 0.1 ? 1 : 0;
       const content = `${sampleContents[contentIndex]} #${i + 1}`;
-      // Use prepared statement with placeholders to avoid escaping issues
       await connection.execute(
         "INSERT INTO posts (user_id, content, is_public) VALUES (?, ?, ?)",
         [userId, content, isPublic]
@@ -173,17 +170,13 @@ async function seed() {
 
     // Generate sample likes (approximately 500 likes)
     console.log("Inserting sample likes...");
-    const addedLikes = new Set(); // To ensure uniqueness
-
+    const addedLikes = new Set();
     for (let i = 0; i < 500; i++) {
-      const postId = Math.floor(Math.random() * 100) + 1; // Random post ID between 1-100
-      const userId = Math.floor(Math.random() * 10) + 1; // Random user ID between 1-10
+      const postId = Math.floor(Math.random() * 100) + 1;
+      const userId = Math.floor(Math.random() * 10) + 1;
       const likeKey = `${postId}-${userId}`;
-
-      // Only add if this combination hasn't been added yet
       if (!addedLikes.has(likeKey)) {
         addedLikes.add(likeKey);
-        // Use prepared statement
         await connection.execute(
           "INSERT INTO likes (post_id, user_id) VALUES (?, ?)",
           [postId, userId]
@@ -193,14 +186,13 @@ async function seed() {
 
     // Generate sample comments (approximately 200 comments)
     console.log("Inserting sample comments...");
-
     const sampleComments = [
       "Great post!",
       "I totally agree with you.",
       "Interesting perspective.",
       "Thanks for sharing!",
       "This made my day.",
-      "I\\'ve been thinking the same thing.", // Escaped apostrophe
+      "I\\'ve been thinking the same thing.",
       "Have you considered trying this approach?",
       "Keep up the good work!",
       "Can you explain more about this?",
@@ -208,12 +200,10 @@ async function seed() {
     ];
 
     for (let i = 0; i < 200; i++) {
-      const postId = Math.floor(Math.random() * 100) + 1; // Random post ID between 1-100
-      const userId = Math.floor(Math.random() * 10) + 1; // Random user ID between 1-10
+      const postId = Math.floor(Math.random() * 100) + 1;
+      const userId = Math.floor(Math.random() * 10) + 1;
       const commentIndex = i % sampleComments.length;
-
       const content = `${sampleComments[commentIndex]} #${i + 1}`;
-      // Use prepared statement
       await connection.execute(
         "INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)",
         [postId, userId, content]
@@ -224,7 +214,6 @@ async function seed() {
   } catch (error) {
     console.error("Error during seeding:", error);
   } finally {
-    // Close the database connection
     await connection.end();
     console.log("Database connection closed");
   }

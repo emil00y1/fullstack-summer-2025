@@ -53,7 +53,7 @@ export default function CommentForm({ postId }) {
     <div className="flex gap-3 py-2">
       <Avatar className="h-10 w-10">
         <AvatarImage
-          src="https://picsum.photos/200" // Default image since your schema doesn't have images
+          src= {session?.user?.avatar || "https://github.com/shadcn.png"}
           alt={session?.user?.username || "User"}
         />
         <AvatarFallback>

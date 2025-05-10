@@ -61,7 +61,7 @@ export default function PostItem({ post }) {
 
   return (
     <Link href={`/posts/${post.id}`} className="block">
-      <div className="p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors">
+      <div className="px-1 py-2 md:p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors">
         <div className="flex gap-3">
           {/* Avatar */}
           <div onClick={(e) => {
@@ -70,7 +70,7 @@ export default function PostItem({ post }) {
           }}>
             <Avatar className="h-10 w-10">
               <AvatarImage
-                src={post.user?.image || "https://picsum.photos/200"}
+                src={post.user?.avatar || "https://picsum.photos/200"}
                 alt={post.user?.name || "User"}
               />
               <AvatarFallback>
@@ -82,7 +82,7 @@ export default function PostItem({ post }) {
           {/* Post content */}
           <div className="flex-1">
             {/* Post header */}
-            <div className="flex items-center gap-1">
+            <div className="md:flex items-center gap-1">
               <span 
                 className="font-semibold hover:underline cursor-pointer"
                 onClick={(e) => {
@@ -92,15 +92,17 @@ export default function PostItem({ post }) {
               >
                 {post.user?.name}
               </span>
-              <span className="text-gray-500">
-                @{post.user?.username || post.user?.email?.split("@")[0]}
-              </span>
-              <span className="text-gray-500">·</span>
-              <span className="text-gray-500 text-sm">{createdAt}</span>
+              <div className="flex gap-1 items-center">
+                <span className="text-gray-500 text-sm md:text-base">
+                  @{post.user?.username || post.user?.email?.split("@")[0]}
+                </span>
+                <span className="text-gray-500">·</span>
+                <span className="text-gray-500 text-xs md:text-sm">{createdAt}</span>
+              </div>
             </div>
             
             {/* Post body */}
-            <div className="mt-1">
+            <div className="mt-2 md:mt-1">
               <p className="whitespace-pre-line">{post.body}</p>
               {post.image && (
                 <div className="mt-3 rounded-xl overflow-hidden">
@@ -125,29 +127,31 @@ export default function PostItem({ post }) {
                 <span>{post.commentsCount || 0}</span>
               </Button>
               
-              <Button
-                onClick={handleRepost}
-                variant="ghost"
-                className={`${
-                  isReposted ? "text-green-500" : "text-gray-500 hover:text-green-500"
-                }`}
-                size="sm"
-              >
-                <Repeat className="h-4 w-4 mr-1" />
-                <span>{repostCount}</span>
-              </Button>
-              
-              <Button
-                onClick={handleLike}
-                variant="ghost"
-                className={`${
-                  isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
-                }`}
-                size="sm"
-              >
-                <Heart className="h-4 w-4 mr-1" fill={isLiked ? "currentColor" : "none"} />
-                <span>{likesCount}</span>
-              </Button>
+              <div>
+                <Button
+                  onClick={handleRepost}
+                  variant="ghost"
+                  className={`${
+                    isReposted ? "text-green-500" : "text-gray-500 hover:text-green-500"
+                  }`}
+                  size="sm"
+                >
+                  <Repeat className="h-4 w-4 mr-1" />
+                  <span>{repostCount}</span>
+                </Button>
+                
+                <Button
+                  onClick={handleLike}
+                  variant="ghost"
+                  className={`${
+                    isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
+                  }`}
+                  size="sm"
+                >
+                  <Heart className="h-4 w-4 mr-1" fill={isLiked ? "currentColor" : "none"} />
+                  <span>{likesCount}</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>

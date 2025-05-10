@@ -34,12 +34,14 @@ export default function RootLayout({ children }) {
         >
           <ThemeWrapper>
             <div className="max-w-5xl flex">
-              <header className="transition-all duration-300 md:w-16 lg:w-64">
+              <header className="transition-all duration-300 w-12 md:w-16 lg:w-64">
                 <SidebarProvider>
                   <SideBar />
                 </SidebarProvider>
               </header>
-              <SessionProvider>{children}</SessionProvider>
+              <main className="flex-1 px-0 md:px-0">
+                <SessionProvider>{children}</SessionProvider>
+              </main>
               <SidebarRight />
             </div>
             <Toaster />
