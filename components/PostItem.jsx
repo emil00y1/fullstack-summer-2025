@@ -66,7 +66,7 @@ export default function PostItem({ post }) {
           {/* Avatar */}
           <div onClick={(e) => {
             e.preventDefault();
-            router.push(`/users/${post.userId}`);
+            router.push(`/user/${post.user.username}`);
           }}>
             <Avatar className="h-10 w-10">
               <AvatarImage
@@ -87,7 +87,7 @@ export default function PostItem({ post }) {
                 className="font-semibold hover:underline cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
-                  router.push(`/users/${post.userId}`);
+                  router.push(`/user/${post.user.username}`);
                 }}
               >
                 {post.user?.name}
