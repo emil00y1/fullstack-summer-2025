@@ -161,7 +161,7 @@ async function seed() {
       const userId = Math.floor(Math.random() * 10) + 1;
       const contentIndex = i % sampleContents.length;
       const isPublic = Math.random() > 0.1 ? 1 : 0;
-      const content = `${sampleContents[contentIndex]} #${i + 1}`;
+      const content = sampleContents[contentIndex];
       await connection.execute(
         "INSERT INTO posts (user_id, content, is_public) VALUES (?, ?, ?)",
         [userId, content, isPublic]
@@ -203,7 +203,7 @@ async function seed() {
       const postId = Math.floor(Math.random() * 100) + 1;
       const userId = Math.floor(Math.random() * 10) + 1;
       const commentIndex = i % sampleComments.length;
-      const content = `${sampleComments[commentIndex]} #${i + 1}`;
+      const content = sampleComments[commentIndex];
       await connection.execute(
         "INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)",
         [postId, userId, content]
