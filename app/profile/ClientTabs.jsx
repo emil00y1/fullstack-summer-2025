@@ -15,9 +15,9 @@ export default function ClientTabs({ posts, comments }) {
       onValueChange={setActiveTab}
     >
       <TabsList className="w-full border-b bg-transparent">
-        <TabsTrigger value="posts" className="flex-1">Posts</TabsTrigger>
-        <TabsTrigger value="comments" className="flex-1">Comments</TabsTrigger>
-        <TabsTrigger value="likes" className="flex-1">Likes</TabsTrigger>
+        <TabsTrigger value="posts" className="flex-1 cursor-pointer">Posts</TabsTrigger>
+        <TabsTrigger value="comments" className="flex-1 cursor-pointer">Comments</TabsTrigger>
+        <TabsTrigger value="likes" className="flex-1 cursor-pointer">Likes</TabsTrigger>
       </TabsList>
       
       <TabsContent value="posts" className="p-0">

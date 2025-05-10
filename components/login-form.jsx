@@ -136,18 +136,15 @@ export function LoginForm({ className, ...props }) {
               
               <Button 
                 type="submit" 
-                className="w-full"
+                className="w-full cursor-pointer"
                 disabled={isLoading}
               >
                 {isLoading ? "Signing in..." : "Login"}
               </Button>
               
               <div className="relative my-2">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">
+                  <span className="px-2 text-muted-foreground">
                     Or continue with
                   </span>
                 </div>
@@ -155,7 +152,7 @@ export function LoginForm({ className, ...props }) {
               
               <Button 
                 variant="outline" 
-                className="w-full" 
+                className="w-full cursor-pointer" 
                 type="button"
                 onClick={() => signIn("google", { callbackUrl })}
                 disabled={isLoading}
@@ -165,7 +162,7 @@ export function LoginForm({ className, ...props }) {
             
               <div className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{" "}
-                <Link href="/signup" className="underline underline-offset-4">
+                <Link href="/signup" className="underline underline-offset-4 cursor-pointer">
                   Sign up
                 </Link>
               </div>
