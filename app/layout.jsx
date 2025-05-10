@@ -8,6 +8,7 @@ import SidebarRight from "@/components/SidebarRight";
 import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
 
+
 const libreFranklin = Libre_Franklin({
   variable: "--font-libre-franklin",
   subsets: ["latin"],
@@ -19,6 +20,9 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+
+  
+
   return (
     <html
       lang="en"
