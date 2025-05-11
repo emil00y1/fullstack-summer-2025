@@ -1,26 +1,23 @@
-// app/user/[username]/page.jsx
 import { notFound } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import BackButton from "@/components/BackButton";
 import { executeQuery } from "@/lib/db";
+import FollowButton from "@/components/FollowButton";
+import { auth } from "@/auth"; // Import auth
 
 export default async function UserProfilePage({ params }) {
-  // Get username from route params
   const { username } = params;
+  if (!username) return notFound();
 
-  if (!username) {
-    return notFound();
-  }
+  // Get current user session
+  const session = await auth();
+  const currentUserId = session?.user?.id || null;
 
   try {
-    // Fetch user data based on username
     const users = await executeQuery(
-      `SELECT id, username, email, avatar, created_at
-       FROM users 
-       WHERE username = ?`,
+      `SELECT id, username, email, avatar, created_at FROM users WHERE username = ?`,
       [username]
     );
 
@@ -76,7 +73,6 @@ export default async function UserProfilePage({ params }) {
 
         {/* Profile header with avatar */}
         <div className="relative">
-          {/* Background area */}
           <div className="h-32 bg-gray-200"></div>
 
           {/* Profile avatar */}
