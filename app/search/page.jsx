@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import BackButton from "@/components/BackButton";
-import SearchField from '@/components/SearchField';
+import SearchField from "@/components/SearchField";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
-  const query = searchParams.get('q') || '';
-  
+  const query = searchParams.get("q") || "";
+
   const [results, setResults] = useState({ users: [], posts: [] });
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
     if (query) {
@@ -24,24 +24,26 @@ export default function SearchPage() {
 
   const performSearch = async (searchQuery) => {
     if (!searchQuery.trim()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-      if (!response.ok) throw new Error('Search failed');
-      
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(searchQuery)}`
+      );
+      if (!response.ok) throw new Error("Search failed");
+
       const data = await response.json();
       setResults(data);
     } catch (error) {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4">
+    <div className="p-4">
       {/* Header */}
       <div className="flex items-center p-4 border-b">
         <BackButton href="/" />
@@ -90,15 +92,15 @@ export default function SearchPage() {
                       <div className="p-3 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
                         <h3 className="font-medium">People</h3>
                         {results.users.length > 3 && (
-                          <button 
-                            onClick={() => setActiveTab('people')}
+                          <button
+                            onClick={() => setActiveTab("people")}
                             className="text-sm text-blue-500"
                           >
                             View all
                           </button>
                         )}
                       </div>
-                      {results.users.slice(0, 3).map(user => (
+                      {results.users.slice(0, 3).map((user) => (
                         <UserItem key={user.id} user={user} />
                       ))}
                     </div>
@@ -110,15 +112,15 @@ export default function SearchPage() {
                       <div className="p-3 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
                         <h3 className="font-medium">Posts</h3>
                         {results.posts.length > 3 && (
-                          <button 
-                            onClick={() => setActiveTab('posts')}
+                          <button
+                            onClick={() => setActiveTab("posts")}
                             className="text-sm text-blue-500"
                           >
                             View all
                           </button>
                         )}
                       </div>
-                      {results.posts.slice(0, 3).map(post => (
+                      {results.posts.slice(0, 3).map((post) => (
                         <PostItem key={post.id} post={post} />
                       ))}
                     </div>
@@ -138,7 +140,7 @@ export default function SearchPage() {
                 </div>
               ) : (
                 <div className="divide-y">
-                  {results.users.map(user => (
+                  {results.users.map((user) => (
                     <UserItem key={user.id} user={user} />
                   ))}
                 </div>
@@ -156,7 +158,7 @@ export default function SearchPage() {
                 </div>
               ) : (
                 <div className="divide-y">
-                  {results.posts.map(post => (
+                  {results.posts.map((post) => (
                     <PostItem key={post.id} post={post} />
                   ))}
                 </div>
@@ -175,10 +177,16 @@ export default function SearchPage() {
 
 function UserItem({ user }) {
   return (
-    <Link href={`/user/${user.username}`} className="flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+    <Link
+      href={`/user/${user.username}`}
+      className="flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-800"
+    >
       <Avatar className="h-10 w-10 mr-3">
         <AvatarImage
-          src={user.avatar || `https://api.dicebear.com/6.x/avataaars/svg?seed=${user.username}`}
+          src={
+            user.avatar ||
+            `https://api.dicebear.com/6.x/avataaars/svg?seed=${user.username}`
+          }
           alt={user.username}
         />
         <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
@@ -192,22 +200,30 @@ function UserItem({ user }) {
 
 function PostItem({ post }) {
   return (
-    <Link href={`/posts/${post.id}`} className="block p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+    <Link
+      href={`/posts/${post.id}`}
+      className="block p-4 hover:bg-gray-50 dark:hover:bg-gray-800"
+    >
       <div className="flex items-center mb-2">
         <Avatar className="h-6 w-6 mr-2">
           <AvatarImage
-            src={post.avatar || `https://api.dicebear.com/6.x/avataaars/svg?seed=${post.username}`}
+            src={
+              post.avatar ||
+              `https://api.dicebear.com/6.x/avataaars/svg?seed=${post.username}`
+            }
             alt={post.username}
           />
-          <AvatarFallback>{post.username.charAt(0).toUpperCase()}</AvatarFallback>
+          <AvatarFallback>
+            {post.username.charAt(0).toUpperCase()}
+          </AvatarFallback>
         </Avatar>
         <span className="text-sm text-gray-500">@{post.username}</span>
         <span className="text-sm text-gray-500 mx-1">·</span>
         <span className="text-sm text-gray-500">
-          {new Date(post.created_at).toLocaleDateString(undefined, { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
+          {new Date(post.created_at).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
           })}
         </span>
       </div>

@@ -12,14 +12,14 @@ import BackButton from "@/components/BackButton";
 export default async function ProfilePage() {
   // Get session using auth()
   const session = await auth();
-  
+
   // Redirect if no session
   if (!session || !session.user) {
     redirect("/login");
   }
-  
+
   const userId = session.user.id;
-  
+
   // Fetch user posts directly from the database instead of using API route
   // This ensures we're using the exact same userId from the session
   const posts = await executeQuery(
@@ -39,9 +39,9 @@ export default async function ProfilePage() {
     ORDER BY p.created_at DESC`,
     [userId]
   );
-  
+
   // Format posts to match the expected structure
-  const formattedPosts = posts.map(post => ({
+  const formattedPosts = posts.map((post) => ({
     id: post.id,
     body: post.content,
     createdAt: post.created_at,
@@ -54,12 +54,12 @@ export default async function ProfilePage() {
       username: post.username,
       name: post.username, // Use username as name
       email: post.email,
-      image: null
+      image: null,
     },
     comments: [],
-    likes: []
+    likes: [],
   }));
-  
+
   // Fetch user comments directly from database
   const comments = await executeQuery(
     `SELECT 
@@ -82,9 +82,9 @@ export default async function ProfilePage() {
     ORDER BY c.created_at DESC`,
     [userId]
   );
-  
+
   // Format comments
-  const formattedComments = comments.map(comment => ({
+  const formattedComments = comments.map((comment) => ({
     id: comment.id,
     body: comment.body,
     createdAt: comment.created_at,
@@ -96,49 +96,50 @@ export default async function ProfilePage() {
       username: comment.username,
       name: comment.username,
       email: comment.email,
-      image: null
+      image: null,
     },
     post: {
       id: comment.post_id,
       body: comment.post_content,
       user: {
         id: comment.post_user_id,
-        username: comment.post_username
-      }
+        username: comment.post_username,
+      },
     },
-    likes: []
+    likes: [],
   }));
-  
+
   // User data from session
   const userData = session.user;
-  
+
   // Generate username from email if not available
-  const username = userData?.username || userData?.email?.split("@")[0] || "user";
+  const username =
+    userData?.username || userData?.email?.split("@")[0] || "user";
 
   return (
-    <div className="max-w-xl mx-auto min-w-[450px]">
+    <div>
       {/* Header */}
       <div className="flex items-center p-4 border-b">
-        <BackButton href="/"/>
+        <BackButton href="/" />
         <div>
           <h1 className="text-xl font-bold">{userData?.name || username}</h1>
           <p className="text-gray-500 text-sm">{formattedPosts.length} posts</p>
         </div>
       </div>
-      
+
       {/* Profile header with cover and avatar */}
       <div className="relative">
         {/* Cover image */}
         <div className="h-32 bg-gray-200">
           {userData?.coverImage && (
-            <img 
+            <img
               src={userData.coverImage}
               alt="Cover"
               className="w-full h-full object-cover"
             />
           )}
         </div>
-        
+
         {/* Profile avatar using Avatar component */}
         <div className="absolute -bottom-12 left-4">
           <Avatar className="h-24 w-24 border-4 border-white">
@@ -148,11 +149,13 @@ export default async function ProfilePage() {
               className="w-full h-full object-cover"
             />
             <AvatarFallback className="text-2xl">
-              {userData?.name?.[0]?.toUpperCase() || username[0]?.toUpperCase() || "U"}
+              {userData?.name?.[0]?.toUpperCase() ||
+                username[0]?.toUpperCase() ||
+                "U"}
             </AvatarFallback>
           </Avatar>
         </div>
-        
+
         {/* Edit profile button */}
         <div className="absolute right-4 bottom-4">
           <Link href="/profile/edit">
@@ -162,28 +165,34 @@ export default async function ProfilePage() {
           </Link>
         </div>
       </div>
-      
+
       {/* Profile info */}
       <div className="mt-14 px-4">
         <h2 className="font-bold text-xl">{userData?.name || username}</h2>
         <p className="text-gray-500">@{username}</p>
-        
+
         {/* Bio */}
         <p className="mt-2">{userData?.bio || "No bio yet"}</p>
-        
+
         {/* Contact & joined date */}
         <div className="flex flex-wrap gap-4 mt-2 text-gray-500 text-sm">
-          {userData?.location && (
-            <span>{userData.location}</span>
-          )}
+          {userData?.location && <span>{userData.location}</span>}
           {userData?.website && (
             <a href={userData.website} className="text-blue-500">
               {userData.website}
             </a>
           )}
-          <span>Joined {userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "recently"}</span>
+          <span>
+            Joined{" "}
+            {userData?.createdAt
+              ? new Date(userData.createdAt).toLocaleDateString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                })
+              : "recently"}
+          </span>
         </div>
-        
+
         {/* Following/Followers */}
         <div className="flex gap-4 mt-2">
           <span>
@@ -196,7 +205,7 @@ export default async function ProfilePage() {
           </span>
         </div>
       </div>
-      
+
       {/* Tabs using client component wrapper */}
       <ClientTabs posts={formattedPosts} comments={formattedComments} />
     </div>

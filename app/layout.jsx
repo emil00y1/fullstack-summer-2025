@@ -9,7 +9,6 @@ import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 
-
 const libreFranklin = Libre_Franklin({
   variable: "--font-libre-franklin",
   subsets: ["latin"],
@@ -25,20 +24,31 @@ export default async function RootLayout({ children }) {
   const isLoggedIn = !!session;
 
   return (
-    <html lang="en" className={`${libreFranklin.variable} antialiased`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${libreFranklin.variable} antialiased`}
+      suppressHydrationWarning
+    >
       <body className="overflow-x-hidden flex justify-center">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <ThemeWrapper>
-            <div className="max-w-5xl flex">
+            <div className="max-w-5xl flex w-full">
               {/* Only show sidebar for authenticated users */}
               {isLoggedIn && (
-                <header className="transition-all duration-300 w-12 md:w-16 lg:w-64">
+                <header className="transition-all duration-300 w-16 lg:w-64">
                   <SidebarProvider>
                     <SideBar />
                   </SidebarProvider>
                 </header>
               )}
-              <main className={`flex-1 px-0 md:px-0 ${!isLoggedIn ? 'w-full' : ''}`}>
+              <main
+                className={`flex-1 px-0 md:px-0 ${!isLoggedIn ? "w-full" : ""}`}
+              >
                 <SessionProvider>{children}</SessionProvider>
               </main>
               {isLoggedIn && <SidebarRight />}
