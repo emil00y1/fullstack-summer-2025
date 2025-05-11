@@ -21,14 +21,19 @@ export default async function UserProfilePage({ params }) {
       [username]
     );
 
-    // Check if user exists
-    if (!users || users.length === 0) {
-      return notFound();
-    }
+    if (!users || users.length === 0) return notFound();
 
     const userData = users[0];
 
-    // Fetch user's posts
+    const followerCount = await executeQuery(
+      `SELECT COUNT(*) as count FROM follows WHERE following_id = ?`,
+      [userData.id]
+    );
+    const followingCount = await executeQuery(
+      `SELECT COUNT(*) as count FROM follows WHERE follower_id = ?`,
+      [userData.id]
+    );
+
     const posts = await executeQuery(
       `SELECT p.*, 
        (SELECT COUNT(*) FROM likes WHERE post_id = p.id) AS like_count,
@@ -39,7 +44,6 @@ export default async function UserProfilePage({ params }) {
       [userData.id]
     );
 
-    // Fetch user's comments
     const comments = await executeQuery(
       `SELECT c.*, p.id AS post_id, u.username AS post_author
        FROM comments c
@@ -50,7 +54,6 @@ export default async function UserProfilePage({ params }) {
       [userData.id]
     );
 
-    // Format comments to include post info
     const formattedComments = comments.map((comment) => ({
       ...comment,
       post: {
@@ -60,8 +63,18 @@ export default async function UserProfilePage({ params }) {
       },
     }));
 
+    // Check if current user is following this profile (only if user is authenticated)
+    let isFollowing = false;
+    if (currentUserId) {
+      const isFollowingResult = await executeQuery(
+        `SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ? LIMIT 1`,
+        [currentUserId, userData.id]
+      );
+      isFollowing = isFollowingResult.length > 0;
+    }
+
     return (
-      <div>
+      <div className="max-w-xl mx-auto min-w-[450px]">
         {/* Header */}
         <div className="flex items-center p-4 border-b">
           <BackButton href="/" />
@@ -75,7 +88,6 @@ export default async function UserProfilePage({ params }) {
         <div className="relative">
           <div className="h-32 bg-gray-200"></div>
 
-          {/* Profile avatar */}
           <div className="absolute -bottom-12 left-4">
             <Avatar className="h-24 w-24 border-4 border-white">
               <AvatarImage
@@ -92,15 +104,26 @@ export default async function UserProfilePage({ params }) {
             </Avatar>
           </div>
 
-          {/* Follow button */}
-          <div className="absolute right-4 bottom-4">
-            <form action="/api/follow" method="POST">
-              <input type="hidden" name="userId" value={userData.id} />
-              <Button type="submit" className="rounded-full">
-                Follow
-              </Button>
-            </form>
-          </div>
+          {/* Follow Button - only show if logged in and not viewing own profile */}
+          {currentUserId && currentUserId !== userData.id && (
+            <div className="absolute right-4 bottom-4">
+              <FollowButton
+                userId={userData.id}
+                initialIsFollowing={isFollowing}
+              />
+            </div>
+          )}
+
+          {/* Login prompt if not logged in */}
+          {!currentUserId && (
+            <div className="absolute right-4 bottom-4">
+              <Link href="/login">
+                <button className="rounded-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm font-medium">
+                  Login to follow
+                </button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Profile info */}
@@ -108,7 +131,6 @@ export default async function UserProfilePage({ params }) {
           <h2 className="font-bold text-xl">@{userData.username}</h2>
           <p className="text-gray-500">{userData.email}</p>
 
-          {/* Joined date */}
           <div className="flex flex-wrap gap-4 mt-2 text-gray-500 text-sm">
             <span>
               Joined{" "}
@@ -119,6 +141,8 @@ export default async function UserProfilePage({ params }) {
                   })
                 : "recently"}
             </span>
+            <span>{followerCount?.[0]?.count || 0} followers</span>
+            <span>{followingCount?.[0]?.count || 0} following</span>
           </div>
         </div>
 
@@ -182,7 +206,6 @@ export default async function UserProfilePage({ params }) {
     );
   } catch (error) {
     console.error("Error fetching user data:", error);
-
     return (
       <div className="max-w-xl mx-auto p-8 text-center">
         <h2 className="text-xl font-bold mb-4">Error</h2>
