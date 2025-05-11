@@ -1,37 +1,39 @@
-// app/user/[username]/page.jsx
 import { notFound } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import BackButton from "@/components/BackButton";
 import { executeQuery } from "@/lib/db";
+import FollowButton from "@/components/FollowButton";
+import { auth } from "@/auth"; // Import auth
 
 export default async function UserProfilePage({ params }) {
-  // Get username from route params
   const { username } = params;
-  
-  if (!username) {
-    return notFound();
-  }
-  
+  if (!username) return notFound();
+
+  // Get current user session
+  const session = await auth();
+  const currentUserId = session?.user?.id || null;
+
   try {
-    // Fetch user data based on username
     const users = await executeQuery(
-      `SELECT id, username, email, avatar, created_at
-       FROM users 
-       WHERE username = ?`,
+      `SELECT id, username, email, avatar, created_at FROM users WHERE username = ?`,
       [username]
     );
-    
-    // Check if user exists
-    if (!users || users.length === 0) {
-      return notFound();
-    }
-    
+
+    if (!users || users.length === 0) return notFound();
+
     const userData = users[0];
-    
-    // Fetch user's posts
+
+    const followerCount = await executeQuery(
+      `SELECT COUNT(*) as count FROM follows WHERE following_id = ?`,
+      [userData.id]
+    );
+    const followingCount = await executeQuery(
+      `SELECT COUNT(*) as count FROM follows WHERE follower_id = ?`,
+      [userData.id]
+    );
+
     const posts = await executeQuery(
       `SELECT p.*, 
        (SELECT COUNT(*) FROM likes WHERE post_id = p.id) AS like_count,
@@ -41,8 +43,7 @@ export default async function UserProfilePage({ params }) {
        ORDER BY p.created_at DESC`,
       [userData.id]
     );
-    
-    // Fetch user's comments
+
     const comments = await executeQuery(
       `SELECT c.*, p.id AS post_id, u.username AS post_author
        FROM comments c
@@ -52,8 +53,7 @@ export default async function UserProfilePage({ params }) {
        ORDER BY c.created_at DESC`,
       [userData.id]
     );
-    
-    // Format comments to include post info
+
     const formattedComments = comments.map(comment => ({
       ...comment,
       post: {
@@ -62,24 +62,32 @@ export default async function UserProfilePage({ params }) {
         }
       }
     }));
-    
+
+    // Check if current user is following this profile (only if user is authenticated)
+    let isFollowing = false;
+    if (currentUserId) {
+      const isFollowingResult = await executeQuery(
+        `SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ? LIMIT 1`,
+        [currentUserId, userData.id]
+      );
+      isFollowing = isFollowingResult.length > 0;
+    }
+
     return (
       <div className="max-w-xl mx-auto min-w-[450px]">
         {/* Header */}
         <div className="flex items-center p-4 border-b">
-          <BackButton href="/"/>
+          <BackButton href="/" />
           <div>
             <h1 className="text-xl font-bold">{userData.username}</h1>
             <p className="text-gray-500 text-sm">{posts.length} posts</p>
           </div>
         </div>
-        
+
         {/* Profile header with avatar */}
         <div className="relative">
-          {/* Background area */}
           <div className="h-32 bg-gray-200"></div>
-          
-          {/* Profile avatar */}
+
           <div className="absolute -bottom-12 left-4">
             <Avatar className="h-24 w-24 border-4 border-white">
               <AvatarImage
@@ -92,29 +100,46 @@ export default async function UserProfilePage({ params }) {
               </AvatarFallback>
             </Avatar>
           </div>
+
+          {/* Follow Button - only show if logged in and not viewing own profile */}
+          {currentUserId && currentUserId !== userData.id && (
+            <div className="absolute right-4 bottom-4">
+              <FollowButton userId={userData.id} initialIsFollowing={isFollowing} />
+            </div>
+          )}
           
-          {/* Follow button */}
-          <div className="absolute right-4 bottom-4">
-            <form action="/api/follow" method="POST">
-              <input type="hidden" name="userId" value={userData.id} />
-              <Button type="submit" className="rounded-full">
-                Follow
-              </Button>
-            </form>
-          </div>
+          {/* Login prompt if not logged in */}
+          {!currentUserId && (
+            <div className="absolute right-4 bottom-4">
+              <Link href="/login">
+                <button className="rounded-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm font-medium">
+                  Login to follow
+                </button>
+              </Link>
+            </div>
+          )}
         </div>
-        
+
         {/* Profile info */}
         <div className="mt-14 px-4">
           <h2 className="font-bold text-xl">@{userData.username}</h2>
           <p className="text-gray-500">{userData.email}</p>
-          
-          {/* Joined date */}
+
           <div className="flex flex-wrap gap-4 mt-2 text-gray-500 text-sm">
-            <span>Joined {userData.created_at ? new Date(userData.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "recently"}</span>
+            <span>
+              Joined{" "}
+              {userData.created_at
+                ? new Date(userData.created_at).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })
+                : "recently"}
+            </span>
+            <span>{followerCount?.[0]?.count || 0} followers</span>
+            <span>{followingCount?.[0]?.count || 0} following</span>
           </div>
         </div>
-        
+
         {/* Tabs */}
         <div className="mt-6 border-t">
           <Tabs defaultValue="posts">
@@ -165,7 +190,6 @@ export default async function UserProfilePage({ params }) {
     );
   } catch (error) {
     console.error("Error fetching user data:", error);
-    
     return (
       <div className="max-w-xl mx-auto p-8 text-center">
         <h2 className="text-xl font-bold mb-4">Error</h2>

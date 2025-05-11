@@ -5,11 +5,9 @@ require("dotenv").config();
 async function seed() {
   console.log("Starting database seeding...");
 
-  // Determine which environment we're in
   const environment = process.env.NODE_ENV || "development";
   console.log(`Running in ${environment} mode`);
 
-  // Set connection config based on environment
   const dbConfig = {
     host:
       environment === "production"
@@ -34,26 +32,23 @@ async function seed() {
         : process.env.DEV_DB_NAME,
   };
 
-  // Add SSL configuration for production (Azure)
   if (environment === "production") {
     dbConfig.ssl = {
       rejectUnauthorized: true,
     };
   }
 
-  // Create connection to MySQL with the appropriate config
   const connection = await mysql.createConnection(dbConfig);
   console.log(`Connected to ${environment} MySQL database`);
 
   try {
-    // Drop tables if they exist to start fresh
     console.log("Dropping existing tables if they exist...");
+    await connection.execute("DROP TABLE IF EXISTS follows");
     await connection.execute("DROP TABLE IF EXISTS comments");
     await connection.execute("DROP TABLE IF EXISTS likes");
     await connection.execute("DROP TABLE IF EXISTS posts");
     await connection.execute("DROP TABLE IF EXISTS users");
 
-    // Create users table with avatar column
     console.log("Creating users table...");
     await connection.execute(`
       CREATE TABLE users (
@@ -66,7 +61,6 @@ async function seed() {
       )
     `);
 
-    // Create posts table
     console.log("Creating posts table...");
     await connection.execute(`
       CREATE TABLE posts (
@@ -79,7 +73,6 @@ async function seed() {
       )
     `);
 
-    // Create likes table
     console.log("Creating likes table...");
     await connection.execute(`
       CREATE TABLE likes (
@@ -93,7 +86,6 @@ async function seed() {
       )
     `);
 
-    // Create comments table
     console.log("Creating comments table...");
     await connection.execute(`
       CREATE TABLE comments (
@@ -107,25 +99,27 @@ async function seed() {
       )
     `);
 
-    // Add indexes for better query performance
-    console.log("Creating indexes for improved performance...");
-    await connection.execute(
-      "CREATE INDEX idx_posts_created_at ON posts(created_at)"
-    );
-    await connection.execute(
-      "CREATE INDEX idx_posts_is_public ON posts(is_public)"
-    );
-    await connection.execute(
-      "CREATE INDEX idx_posts_user_id ON posts(user_id)"
-    );
-    await connection.execute(
-      "CREATE INDEX idx_likes_post_id ON likes(post_id)"
-    );
-    await connection.execute(
-      "CREATE INDEX idx_comments_post_id ON comments(post_id)"
-    );
+    console.log("Creating follows table...");
+    await connection.execute(`
+      CREATE TABLE follows (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        follower_id INT NOT NULL,
+        following_id INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (follower_id) REFERENCES users(id),
+        FOREIGN KEY (following_id) REFERENCES users(id),
+        UNIQUE (follower_id, following_id)
+      )
+    `);
 
-    // Insert sample users (10 users) with avatar URLs
+    console.log("Creating indexes for improved performance...");
+    await connection.execute("CREATE INDEX idx_posts_created_at ON posts(created_at)");
+    await connection.execute("CREATE INDEX idx_posts_is_public ON posts(is_public)");
+    await connection.execute("CREATE INDEX idx_posts_user_id ON posts(user_id)");
+    await connection.execute("CREATE INDEX idx_likes_post_id ON likes(post_id)");
+    await connection.execute("CREATE INDEX idx_comments_post_id ON comments(post_id)");
+    await connection.execute("CREATE INDEX idx_follows_follower ON follows(follower_id)");
+
     console.log("Inserting sample users...");
     const hashedPassword = await bcrypt.hash('password', 10);
     await connection.execute(`
@@ -142,7 +136,6 @@ async function seed() {
       ('lisa_taylor', 'lisa@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=lisa_taylor')
     `);
 
-    // Generate sample posts (100 posts)
     console.log("Inserting sample posts...");
     const sampleContents = [
       "Just had an amazing cup of coffee!",
@@ -168,7 +161,6 @@ async function seed() {
       );
     }
 
-    // Generate sample likes (approximately 500 likes)
     console.log("Inserting sample likes...");
     const addedLikes = new Set();
     for (let i = 0; i < 500; i++) {
@@ -184,7 +176,6 @@ async function seed() {
       }
     }
 
-    // Generate sample comments (approximately 200 comments)
     console.log("Inserting sample comments...");
     const sampleComments = [
       "Great post!",
@@ -217,25 +208,6 @@ async function seed() {
     await connection.end();
     console.log("Database connection closed");
   }
-
-  // After creating the comments table in your seed.js file
-console.log("Creating follows table...");
-await connection.execute(`
-  CREATE TABLE follows (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    follower_id INT NOT NULL,
-    following_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (follower_id) REFERENCES users(id),
-    FOREIGN KEY (following_id) REFERENCES users(id),
-    UNIQUE (follower_id, following_id)
-  )
-`);
-
-// Add an index for better query performance
-console.log("Creating follows index for improved performance...");
-await connection.execute("CREATE INDEX idx_follows_follower ON follows(follower_id)");
 }
 
-// Run the seed function
 seed();
