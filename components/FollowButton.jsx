@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Check, Loader2 } from "lucide-react";
 
 export default function FollowButton({ userId, initialIsFollowing }) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
@@ -10,26 +11,21 @@ export default function FollowButton({ userId, initialIsFollowing }) {
   const handleFollowToggle = async () => {
     try {
       setIsLoading(true);
-      
-      // Create form data to send
-      const formData = new FormData();
-      formData.append("userId", userId);
-      
-      // Send follow/unfollow request to API
+
       const response = await fetch("/api/follow", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
-        // Toggle the follow state based on the response
         setIsFollowing(data.action === "followed");
       } else {
-        // Handle error case
         console.error("Follow action failed:", data.error);
-        // Optionally show error message to user
       }
     } catch (error) {
       console.error("Error following user:", error);
@@ -41,14 +37,20 @@ export default function FollowButton({ userId, initialIsFollowing }) {
   return (
     <Button
       variant={isFollowing ? "outline" : "default"}
-      className={`rounded-full ${isFollowing ? "border-gray-300" : ""}`}
+      className={`rounded-full cursor-pointer ${
+        isFollowing ? "border-gray-300" : ""
+      }`}
       onClick={handleFollowToggle}
       disabled={isLoading}
     >
       {isLoading ? (
-        <span className="animate-pulse">Loading...</span>
+        <span className="animate-spin">
+          <Loader2 />
+        </span>
       ) : isFollowing ? (
-        "Following"
+        <>
+          Following <Check />
+        </>
       ) : (
         "Follow"
       )}
