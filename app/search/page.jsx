@@ -185,7 +185,6 @@ function UserItem({ user }) {
       </Avatar>
       <div>
         <div className="font-medium">@{user.username}</div>
-        <div className="text-sm text-gray-500">{user.email}</div>
       </div>
     </Link>
   );

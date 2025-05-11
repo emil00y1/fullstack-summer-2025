@@ -24,7 +24,7 @@ export async function GET(request) {
         email, 
         avatar 
       FROM users 
-      WHERE username LIKE ? OR email LIKE ?
+      WHERE username LIKE ?
       LIMIT 5`,
       [searchTerm, searchTerm]
     );
