@@ -30,7 +30,7 @@ const data = [
   },
   {
     title: "Explore",
-    url: "#",
+    url: "/search",
     icon: Search,
   },
   {

@@ -48,6 +48,11 @@ export default function SearchPage() {
         <h1 className="text-xl font-bold ml-4">Search</h1>
       </div>
 
+      {/* Search field */}
+      <div className="py-4">
+        <SearchField />
+      </div>
+
       {query ? (
         <>
           <div className="py-2 px-4">
