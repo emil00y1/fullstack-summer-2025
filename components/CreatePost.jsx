@@ -84,7 +84,7 @@ export function CreatePost() {
                   {session?.user?.name?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
-              <div className="w-full relative">
+              <div className="w-full">
                 <Textarea
                   value={post}
                   onChange={(e) => setPost(e.target.value)}
@@ -96,32 +96,36 @@ export function CreatePost() {
                   disabled={status !== "authenticated"}
                   className="min-h-24 bg-accent text-base resize-none border-none focus-visible:ring-0 p-0 placeholder:text-gray-500 p-2"
                 />
-                <div className="text-sm text-gray-500 absolute top-1">
-                  {post.length > 0 && (
-                    <span
-                      className={post.length > MAX_CHARS ? "text-red-500" : ""}
+                <div className="flex justify-between">
+                  <div className="text-sm text-gray-500">
+                    {post.length > 0 && (
+                      <span
+                        className={
+                          post.length > MAX_CHARS ? "text-red-500" : ""
+                        }
+                      >
+                        {post.length}/{MAX_CHARS}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex justify-end items-center mt-4">
+                    <Button
+                      type="submit"
+                      disabled={
+                        status !== "authenticated" ||
+                        post.length === 0 ||
+                        post.length > MAX_CHARS ||
+                        isSubmitting
+                      }
+                      className="rounded-full bg-blue-500 hover:bg-blue-600 px-5 cursor-pointer"
                     >
-                      {post.length}/{MAX_CHARS}
-                    </span>
-                  )}
+                      {isSubmitting ? "Posting..." : "Post"}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end items-center">
-              <Button
-                type="submit"
-                disabled={
-                  status !== "authenticated" ||
-                  post.length === 0 ||
-                  post.length > MAX_CHARS ||
-                  isSubmitting
-                }
-                className="rounded-full bg-blue-500 hover:bg-blue-600 px-5 cursor-pointer"
-              >
-                {isSubmitting ? "Posting..." : "Post"}
-              </Button>
-            </div>
             <Separator className="my-2" />
           </div>
         </div>

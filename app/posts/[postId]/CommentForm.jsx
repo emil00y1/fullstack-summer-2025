@@ -13,17 +13,21 @@ export default function CommentForm({ postId }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const commentInputRef = useRef(null);
-  
+
   // Auto focus the comment input if the URL contains #comment-input
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.hash === '#comment-input' && commentInputRef.current) {
+    if (
+      typeof window !== "undefined" &&
+      window.location.hash === "#comment-input" &&
+      commentInputRef.current
+    ) {
       // Set a slight delay to ensure the element is fully rendered
       setTimeout(() => {
         commentInputRef.current.focus();
       }, 100);
     }
   }, []);
-  
+
   const submitComment = async () => {
     if (!session || !commentText.trim() || isSubmitting) return;
 
@@ -48,19 +52,19 @@ export default function CommentForm({ postId }) {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div className="flex gap-3 py-2">
       <Avatar className="h-10 w-10">
         <AvatarImage
-          src= {session?.user?.avatar || "https://github.com/shadcn.png"}
+          src={session?.user?.avatar || "https://github.com/shadcn.png"}
           alt={session?.user?.username || "User"}
         />
         <AvatarFallback>
           {session?.user?.username?.[0]?.toUpperCase() || "U"}
         </AvatarFallback>
       </Avatar>
-      
+
       <div className="flex-1">
         <Textarea
           id="comment-input"
@@ -71,11 +75,11 @@ export default function CommentForm({ postId }) {
           className="resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-2 min-h-[80px]"
         />
         <div className="flex justify-end mt-2">
-          <Button 
+          <Button
             onClick={submitComment}
             disabled={!commentText.trim() || isSubmitting}
             size="sm"
-            className="rounded-full px-4 cursor-pointer"
+            className="rounded-full px-4 bg-blue-500 hover:bg-blue-600 cursor-pointer"
           >
             Reply
           </Button>
