@@ -217,6 +217,24 @@ async function seed() {
     await connection.end();
     console.log("Database connection closed");
   }
+
+  // After creating the comments table in your seed.js file
+console.log("Creating follows table...");
+await connection.execute(`
+  CREATE TABLE follows (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    follower_id INT NOT NULL,
+    following_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (follower_id) REFERENCES users(id),
+    FOREIGN KEY (following_id) REFERENCES users(id),
+    UNIQUE (follower_id, following_id)
+  )
+`);
+
+// Add an index for better query performance
+console.log("Creating follows index for improved performance...");
+await connection.execute("CREATE INDEX idx_follows_follower ON follows(follower_id)");
 }
 
 // Run the seed function
