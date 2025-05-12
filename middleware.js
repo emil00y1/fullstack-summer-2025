@@ -2,14 +2,12 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 export default auth((req) => {
-  const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
 
   // Define public routes that don't require authentication
   const publicRoutes = ["/login", "/signup"];
   const isPublicRoute = publicRoutes.some(
-    (route) =>
-      nextUrl.pathname === route || nextUrl.pathname.startsWith(route + "/")
+    (route) => req.url.includes(route) || req.url.includes(route + "/")
   );
 
   // Get the base URL from NEXTAUTH_URL environment variable
