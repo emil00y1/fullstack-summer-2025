@@ -1,3 +1,17 @@
+stages:
+  - static_analysis
+  - test
+  - build
+  - deploy
+
+variables:
+  VERCEL_ORG_ID: "GW4Hb5Pwk6bubK6v0xekWpLr" # Vercel Org ID - set in GitLab CI/CD settings
+  VERCEL_PROJECT_ID: "prj_wac3Jryb9tHtgeCRKW2f3KClnfPz" # Vercel Project ID - set in GitLab CI/CD settings
+  DATABASE_URL: "mysql-summer-2025.mysql.database.azure.com" # set in GitLab CI/CD settings
+  NEXTAUTH_SECRET: "F5V3uUy4u85UpHYfVQCEezCmrUFn+BOATWX/iYAcN34=" # set in GitLab CI/CD settings
+  NEXT_PUBLIC_VERCEL_URL: "https://exam-summer-2025-gnlz26q88-emil00y1s-projects.vercel.app/" # set in GitLab CI/CD settings
+  VERCEL_TOKEN: "LK32V6ZycKBZjruYUmBSda38"
+
 # You can override the included template(s) by including variable overrides
 # SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
 # Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/pipeline/#customization
@@ -11,3 +25,52 @@ sast:
   stage: test
 include:
 - template: Security/SAST.gitlab-ci.yml
+
+static_analysis:
+  stage: static_analysis
+  image: node:latest
+  script:
+    - npm install -g eslint
+    - eslint .
+
+test:
+  stage: test
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY # Login to the GitLab container registry. $CI_REGISTRY_USER and $CI_REGISTRY_PASSWORD are predefined CI/CD variables in GitLab.
+  script:
+    - docker-compose up --build -d
+    - sleep 30 # give the services time to start
+    - npm install
+    - npm test
+  after_script:
+    - docker-compose down
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  after_script:
+    - docker logout
+
+deploy:
+  stage: deploy
+  image: node:latest
+  before_script:
+    - npm install -g vercel
+  script:
+    - vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+    - vercel build --token=$VERCEL_TOKEN
+    - vercel deploy --prebuilt --token=$VERCEL_TOKEN
+  environment:
+    name: production
+  only:
+    - main
