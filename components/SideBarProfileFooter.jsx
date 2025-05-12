@@ -30,11 +30,11 @@ export default async function SidebarProfileFooter() {
   };
 
   return (
-    <SidebarFooter className="p-4">
+    <SidebarFooter className="lg:p-4">
       {session ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="cursor-pointer">
-            <button className="w-full flex items-center md:justify-between p-2 rounded-full hover:bg-gray-100 dark:hover:bg-input/50 transition-colors focus:outline-none">
+            <button className="w-full flex items-center justify-center lg:justify-between p-1 lg:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-input/50 transition-colors focus:outline-none">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={userData.avatar} alt={userData.username} />

@@ -43,10 +43,10 @@ export function SideBar({ ...props }) {
   const MainSidebarContent = () => (
     <>
       <SidebarContent className="p-1">
-        <SidebarMenu className="flex flex-col gap-4">
+        <SidebarMenu className="flex flex-col gap-4 items-center lg:items-start">
           <SidebarMenuItem>
-            <SidebarMenuButton className="hover:bg-transparent">
-              <Link href="/" className="p-1">
+            <SidebarMenuButton className="hover:bg-transparent justify-center lg:justify-start">
+              <Link href="/" className="p-1 ">
                 <Logo
                   height={20}
                   width={20}
@@ -65,8 +65,11 @@ export function SideBar({ ...props }) {
                   isActive={item.isActive}
                   className="text-lg p-3 rounded-3xl"
                 >
-                  <Link href={item.url} className="py-4">
-                    <div className="w-5 h-5 flex items-center justify-center md:mr-2 lg:mr-2">
+                  <Link
+                    href={item.url}
+                    className="py-4 justify-center lg:justify-start"
+                  >
+                    <div className="w-5 h-5 flex items-center justify-center lg:mr-2">
                       <IconComponent className="w-full h-full" />
                     </div>
                     <span className="lg:inline hidden">{item.title}</span>
@@ -75,7 +78,6 @@ export function SideBar({ ...props }) {
               </SidebarMenuItem>
             );
           })}
-
           <PostDialog />
         </SidebarMenu>
       </SidebarContent>
