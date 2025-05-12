@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import BioTextarea from "@/components/BioTextarea";
+import BackButton from "@/components/BackButton";
 
 // Maximum file sizes
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
@@ -179,7 +180,8 @@ export default async function EditProfilePage() {
 
   return (
     <div>
-      <div className="p-6">
+      <BackButton />
+      <div className="px-6 mt-4">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight">Edit Profile</h1>
