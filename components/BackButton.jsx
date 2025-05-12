@@ -1,14 +1,18 @@
-import Link from "next/link"
-import { Button } from "./ui/button"
+"use client";
+import { Button } from "./ui/button";
 
-function BackButton({href}) {
+function BackButton() {
+  const handleGoBack = () => {
+    window.history.back();
+  };
+
   return (
-      <Link href={href} className="mr-6 ">
-          <Button variant="ghost" className="cursor-pointer">
-            ←
-          </Button>
-        </Link>
-  )
+    <div className="mr-6">
+      <Button variant="ghost" className="cursor-pointer" onClick={handleGoBack}>
+        ←
+      </Button>
+    </div>
+  );
 }
 
-export default BackButton
+export default BackButton;

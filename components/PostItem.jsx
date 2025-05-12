@@ -20,9 +20,7 @@ export default function PostItem({ post }) {
   const [repostCount, setRepostCount] = useState(0);
 
   // Format date with our custom function
-  const createdAt = post.createdAt 
-    ? formatTimeAgo(post.createdAt)
-    : "recently";
+  const createdAt = post.createdAt ? formatTimeAgo(post.createdAt) : "recently";
 
   const handleLike = async (e) => {
     e.preventDefault(); // Prevent clicking through to post page
@@ -31,12 +29,12 @@ export default function PostItem({ post }) {
     try {
       const endpoint = `/api/posts/${post.id}/like`;
       const method = isLiked ? "DELETE" : "POST";
-      
+
       const response = await fetch(endpoint, { method });
-      
+
       if (response.ok) {
         setIsLiked(!isLiked);
-        setLikesCount(prevCount => isLiked ? prevCount - 1 : prevCount + 1);
+        setLikesCount((prevCount) => (isLiked ? prevCount - 1 : prevCount + 1));
       }
     } catch (error) {
       console.error("Error toggling like:", error);
@@ -49,7 +47,7 @@ export default function PostItem({ post }) {
 
     // Toggle repost state for immediate feedback
     setIsReposted(!isReposted);
-    setRepostCount(prev => isReposted ? prev - 1 : prev + 1);
+    setRepostCount((prev) => (isReposted ? prev - 1 : prev + 1));
 
     // In a real app, you'd implement an API call for reposting
   };
@@ -64,26 +62,28 @@ export default function PostItem({ post }) {
       <div className="px-1 py-2 md:p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors">
         <div className="flex gap-3">
           {/* Avatar */}
-          <div onClick={(e) => {
-            e.preventDefault();
-            router.push(`/user/${post.user.username}`);
-          }}>
+          <div
+            onClick={(e) => {
+              e.preventDefault();
+              router.push(`/user/${post.user.username}`);
+            }}
+          >
             <Avatar className="h-10 w-10">
               <AvatarImage
-                src={post.user?.avatar || "https://picsum.photos/200"}
+                src={post.user?.avatar}
                 alt={post.user?.name || "User"}
               />
               <AvatarFallback>
-                {post.user?.name?.[0]?.toUpperCase() || "U"}
+                {post.user?.username?.[0]?.toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
           </div>
-          
+
           {/* Post content */}
           <div className="flex-1">
             {/* Post header */}
             <div className="md:flex items-center gap-1">
-              <span 
+              <span
                 className="font-semibold hover:underline cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
@@ -97,10 +97,12 @@ export default function PostItem({ post }) {
                   @{post.user?.username || post.user?.email?.split("@")[0]}
                 </span>
                 <span className="text-gray-500">·</span>
-                <span className="text-gray-500 text-xs md:text-sm">{createdAt}</span>
+                <span className="text-gray-500 text-xs md:text-sm">
+                  {createdAt}
+                </span>
               </div>
             </div>
-            
+
             {/* Post body */}
             <div className="mt-2 md:mt-1">
               <p className="whitespace-pre-line">{post.body}</p>
@@ -114,7 +116,7 @@ export default function PostItem({ post }) {
                 </div>
               )}
             </div>
-            
+
             {/* Action buttons */}
             <div className="flex justify-between mt-3">
               <Button
@@ -126,29 +128,36 @@ export default function PostItem({ post }) {
                 <MessageSquare className="h-4 w-4 mr-1" />
                 <span>{post.commentsCount || 0}</span>
               </Button>
-              
+
               <div>
                 <Button
                   onClick={handleRepost}
                   variant="ghost"
                   className={`${
-                    isReposted ? "text-green-500" : "text-gray-500 hover:text-green-500"
+                    isReposted
+                      ? "text-green-500"
+                      : "text-gray-500 hover:text-green-500"
                   }`}
                   size="sm"
                 >
                   <Repeat className="h-4 w-4 mr-1" />
                   <span>{repostCount}</span>
                 </Button>
-                
+
                 <Button
                   onClick={handleLike}
                   variant="ghost"
                   className={`${
-                    isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
+                    isLiked
+                      ? "text-red-500"
+                      : "text-gray-500 hover:text-red-500"
                   }`}
                   size="sm"
                 >
-                  <Heart className="h-4 w-4 mr-1" fill={isLiked ? "currentColor" : "none"} />
+                  <Heart
+                    className="h-4 w-4 mr-1"
+                    fill={isLiked ? "currentColor" : "none"}
+                  />
                   <span>{likesCount}</span>
                 </Button>
               </div>

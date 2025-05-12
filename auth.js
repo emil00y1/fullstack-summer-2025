@@ -55,7 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const user = await response.json();
           return {
             id: user.id.toString(),
-            name: user.username,
+            username: user.username,
             email: user.email,
             createdAt: user.created_at,
           };
@@ -70,7 +70,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.name = user.name;
+        token.username = user.username;
         token.email = user.email;
         token.createdAt = user.createdAt;
       }
@@ -79,7 +79,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id;
-        session.user.name = token.name;
+        session.user.username = token.username;
         session.user.email = token.email;
         session.user.createdAt = token.createdAt;
       }
