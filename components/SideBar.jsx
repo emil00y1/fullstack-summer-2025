@@ -5,22 +5,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import {
-  Home,
-  Search,
-  Bell,
-  Mail,
-  User,
-  Menu,
-} from "lucide-react";
+import { Home, Search, Bell, Mail, User } from "lucide-react";
 import Link from "next/link";
-import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-
 import Logo from "./Logo";
 import SidebarProfileFooter from "./SideBarProfileFooter";
-import { MobileSidebar } from "./MobileSidebar";
+import PostDialog from "./PostDialog";
 
 const data = [
   {
@@ -86,10 +75,8 @@ export function SideBar({ ...props }) {
               </SidebarMenuItem>
             );
           })}
-          <Button className="rounded-3xl max-w-52 font-bold cursor-pointer mt-4 min-w-0 flex items-center justify-center w-12 h-12 p-0 lg:w-auto lg:h-auto lg:p-4 lg:max-w-52">
-            <span className="lg:inline hidden">Post</span>
-            <span className="lg:hidden inline font-bold text-lg">+</span>
-          </Button>
+
+          <PostDialog />
         </SidebarMenu>
       </SidebarContent>
       <SidebarProfileFooter />
@@ -99,10 +86,12 @@ export function SideBar({ ...props }) {
   return (
     <>
       {/* Desktop sidebar */}
-        <Sidebar {...props} className="fixed w-16 lg:w-64 transition-all duration-300">
-          <MainSidebarContent />
-        </Sidebar>
-
+      <Sidebar
+        {...props}
+        className="fixed w-16 lg:w-64 transition-all duration-300"
+      >
+        <MainSidebarContent />
+      </Sidebar>
     </>
   );
 }

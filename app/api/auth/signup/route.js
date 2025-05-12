@@ -14,7 +14,7 @@ export async function POST(request) {
   try {
     // Parse request body
     const body = await request.json();
-    
+
     // Validate input data
     const result = signupSchema.safeParse(body);
     if (!result.success) {
@@ -24,31 +24,31 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    
+
     const { username, email, password } = result.data;
-    
+
     // Check if user already exists
     const existingUser = await executeQuery(
       "SELECT * FROM users WHERE email = ?",
       [email]
     );
-    
+
     if (existingUser.length > 0) {
       return NextResponse.json(
         { message: "Email already exists" },
         { status: 409 }
       );
     }
-    
+
     // Hash the password
     const hashedPassword = await hash(password, 10);
-    
+
     // Insert the user into the database
     await executeQuery(
       "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
       [username, email, hashedPassword]
     );
-    
+
     // Return success response
     return NextResponse.json(
       { message: "Account created successfully" },

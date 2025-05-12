@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
+import { Loader2 } from "lucide-react";
 
 export function CreatePost() {
   const { data: session, status } = useSession();
@@ -17,7 +17,6 @@ export function CreatePost() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     // Don't proceed if not logged in or if content is invalid
     if (
       status !== "authenticated" ||
@@ -115,16 +114,20 @@ export function CreatePost() {
                         post.length > MAX_CHARS ||
                         isSubmitting
                       }
-                      className="rounded-full bg-blue-500 hover:bg-blue-600 px-5 cursor-pointer"
+                      className="rounded-full bg-blue-500 hover:bg-blue-600 text-white px-5 cursor-pointer"
                     >
-                      {isSubmitting ? "Posting..." : "Post"}
+                      {isSubmitting ? (
+                        <span className="animate-spin">
+                          <Loader2 />
+                        </span>
+                      ) : (
+                        "Post"
+                      )}
                     </Button>
                   </div>
                 </div>
               </div>
             </div>
-
-            <Separator className="my-2" />
           </div>
         </div>
       </form>

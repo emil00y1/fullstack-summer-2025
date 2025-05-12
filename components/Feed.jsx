@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SessionProvider } from "next-auth/react";
 import { CreatePost } from "./CreatePost";
+import { Separator } from "./ui/separator";
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
@@ -117,6 +118,8 @@ export default function Feed() {
       <SessionProvider>
         <CreatePost />
       </SessionProvider>
+      <Separator className="my-2" />
+
       {posts.length === 0 && !isLoading ? (
         <div className="text-center py-8">
           <p className="text-gray-500">No posts found.</p>
