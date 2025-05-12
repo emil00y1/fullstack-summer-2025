@@ -5,16 +5,17 @@ stages:
 
 test:
   stage: test
-  image: node:latest
+  image: docker:latest
   services:
     - docker:dind
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY # Login to the GitLab container registry. $CI_REGISTRY_USER and $CI_REGISTRY_PASSWORD are predefined CI/CD variables in GitLab.
+    - apk add --no-cache docker-compose
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker-compose up --build -d
-    - sleep 30 # give the services time to start
-    - npm install
-    - npm test
+    - sleep 30
+    - docker exec exam-summer-2025-next-app-1 npm install
+    - docker exec exam-summer-2025-next-app-1 npm test
   after_script:
     - docker-compose down
 
