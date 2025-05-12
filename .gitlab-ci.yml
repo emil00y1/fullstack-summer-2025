@@ -13,9 +13,10 @@ test:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker-compose up --build -d
-    - sleep 30
-    - docker exec exam-summer-2025-next-app-1 npm install
-    - docker exec exam-summer-2025-next-app-1 npm test
+    - sleep 60
+    - CONTAINER_ID=$(docker-compose ps -q)
+    - docker exec $CONTAINER_ID npm install
+    - docker exec $CONTAINER_ID npm test
   after_script:
     - docker-compose down
 
