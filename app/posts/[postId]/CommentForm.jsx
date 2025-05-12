@@ -57,7 +57,7 @@ export default function CommentForm({ postId }) {
     <div className="flex gap-3 py-2">
       <Avatar className="h-10 w-10">
         <AvatarImage
-          src={session?.user?.avatar || "https://github.com/shadcn.png"}
+          src={session?.user?.avatar}
           alt={session?.user?.username || "User"}
         />
         <AvatarFallback>
@@ -66,6 +66,14 @@ export default function CommentForm({ postId }) {
       </Avatar>
 
       <div className="flex-1">
+        <div className="md:flex items-center gap-1">
+          <p className="font-semibold hover:underline">
+            {session.user.username}
+          </p>
+          <span className="text-gray-500 text-sm md:text-base">
+            @{session.user.username}
+          </span>
+        </div>
         <Textarea
           id="comment-input"
           ref={commentInputRef}

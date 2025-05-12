@@ -106,9 +106,21 @@ export default async function ProfilePage() {
   }));
 
   // User data from session
-  const userData = session.user;
+  const sessionUser = session.user;
 
-  console.log(userData);
+  // Fetch user data with bio and cover
+  const user = await executeQuery(
+    "SELECT avatar, bio, cover FROM users WHERE id = ?",
+    [userId]
+  );
+
+  // Combine session user data with bio and cover
+  const userData = {
+    ...sessionUser,
+    avatar: user[0]?.avatar || null,
+    bio: user[0]?.bio || null,
+    cover: user[0]?.cover || null,
+  };
 
   return (
     <div>
@@ -117,7 +129,7 @@ export default async function ProfilePage() {
         postsAmount={formattedPosts.length}
       />
 
-      <ProfileInfo userData={userData} />
+      <ProfileInfo userData={userData} isOwnAccount={true} />
 
       {/* Tabs using client component wrapper */}
       <ClientTabs posts={formattedPosts} comments={formattedComments} />

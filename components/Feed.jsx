@@ -31,35 +31,32 @@ export default function Feed() {
       }
 
       const data = await response.json();
-      console.log("Raw API response:", data);
 
       // Check if data.posts exists and is an array
       const fetchedPosts = Array.isArray(data.posts) ? data.posts : [];
 
       // Transform the fetched posts to match the expected format for PostItem
-      const formattedPosts = fetchedPosts.map(post => {
+      const formattedPosts = fetchedPosts.map((post) => {
         return {
           id: post.id,
-          body: post.content,            // Convert 'content' to 'body' expected by PostItem
-          createdAt: post.created_at,    // Convert 'created_at' to 'createdAt'
-          userId: post.user_id,          // Map 'user_id' to 'userId'
-          likesCount: post.like_count,   // Map 'like_count' to 'likesCount'
+          body: post.content, // Convert 'content' to 'body' expected by PostItem
+          createdAt: post.created_at, // Convert 'created_at' to 'createdAt'
+          userId: post.user_id, // Map 'user_id' to 'userId'
+          likesCount: post.like_count, // Map 'like_count' to 'likesCount'
           commentsCount: post.comment_count, // Map 'comment_count' to 'commentsCount'
           isPublic: post.is_public === 1, // Convert 'is_public' to boolean
           user: {
             id: post.user_id,
             username: post.username,
             email: post.email,
-            name: post.username,         // Use username as name if name is not provided
-            avatar: post.avatar                 // Default image to null if not provided
+            name: post.username, // Use username as name if name is not provided
+            avatar: post.avatar, // Default image to null if not provided
           },
           // Add empty arrays for these properties that PostItem expects
           comments: [],
-          likes: []
+          likes: [],
         };
       });
-
-      console.log("Formatted posts:", formattedPosts);
 
       // Set hasMore flag based on returned posts count
       if (fetchedPosts.length < limit) {
@@ -118,7 +115,7 @@ export default function Feed() {
   return (
     <div className="max-w-xl mx-auto p-4">
       <SessionProvider>
-        <CreatePost/>
+        <CreatePost />
       </SessionProvider>
       {posts.length === 0 && !isLoading ? (
         <div className="text-center py-8">
@@ -128,7 +125,6 @@ export default function Feed() {
         <div className="space-y-4">
           <SessionProvider>
             {posts.map((post) => {
-              console.log("Rendering post with ID:", post.id);
               return <PostItem key={post.id} post={post} />;
             })}
           </SessionProvider>

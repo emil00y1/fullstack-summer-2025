@@ -5,9 +5,11 @@ import { executeQuery } from "@/lib/db";
 import Link from "next/link";
 import FollowButton from "../FollowButton";
 
-async function ProfileInfo({ userData }) {
-  const currentUserId = userData.id;
-
+async function ProfileInfo({
+  userData,
+  isOwnAccount = false,
+  isFollowing = false,
+}) {
   const followerCount = await executeQuery(
     `SELECT COUNT(*) as count FROM follows WHERE following_id = ?`,
     [userData.id]
@@ -15,11 +17,6 @@ async function ProfileInfo({ userData }) {
   const followingCount = await executeQuery(
     `SELECT COUNT(*) as count FROM follows WHERE follower_id = ?`,
     [userData.id]
-  );
-
-  const isFollowing = await executeQuery(
-    `SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ? LIMIT 1`,
-    [currentUserId, userData.id]
   );
 
   return (
@@ -48,25 +45,20 @@ async function ProfileInfo({ userData }) {
             </AvatarFallback>
           </Avatar>
         </div>
-        {currentUserId && (
-          <div className="absolute right-4 bottom-4">
-            {currentUserId === userData.id ? (
-              <Link href="/profile/edit">
-                <Button
-                  variant="outline"
-                  className="rounded-full cursor-pointer"
-                >
-                  Edit profile
-                </Button>
-              </Link>
-            ) : (
-              <FollowButton
-                userId={userData.id}
-                initialIsFollowing={isFollowing.length > 0}
-              />
-            )}
-          </div>
-        )}
+        <div className="absolute right-4 bottom-4">
+          {isOwnAccount ? (
+            <Link href="/profile/edit">
+              <Button variant="outline" className="rounded-full cursor-pointer">
+                Edit profile
+              </Button>
+            </Link>
+          ) : (
+            <FollowButton
+              userId={userData.id}
+              initialIsFollowing={isFollowing}
+            />
+          )}
+        </div>
       </div>
       {/* Profile info */}
       <div className="mt-14 px-4">

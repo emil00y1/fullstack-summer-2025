@@ -35,7 +35,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           // Use the baseUrl for API call with validation
           const verifyUrl = new URL("/api/auth/verify", baseUrl);
-          console.log("Verifying with URL:", verifyUrl.toString());
 
           const response = await fetch(verifyUrl.toString(), {
             method: "POST",
@@ -58,6 +57,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             username: user.username,
             email: user.email,
             createdAt: user.created_at,
+            bio: user.bio, // Bio field
+            cover: user.cover, // Cover field
+            avatar: user.avatar, // Added avatar field
           };
         } catch (error) {
           console.error("Authentication error:", error);
@@ -73,6 +75,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.username = user.username;
         token.email = user.email;
         token.createdAt = user.createdAt;
+        token.bio = user.bio; // Bio in token
+        token.cover = user.cover; // Cover in token
+        token.avatar = user.avatar; // Avatar in token
       }
       return token;
     },
@@ -82,6 +87,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.username = token.username;
         session.user.email = token.email;
         session.user.createdAt = token.createdAt;
+        session.user.bio = token.bio; // Bio in session
+        session.user.cover = token.cover; // Cover in session
+        session.user.avatar = token.avatar; // Avatar in session
       }
       return session;
     },

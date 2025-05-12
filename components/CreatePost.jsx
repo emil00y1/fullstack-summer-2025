@@ -15,8 +15,6 @@ export function CreatePost() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const MAX_CHARS = 280;
 
-  console.log(session);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 

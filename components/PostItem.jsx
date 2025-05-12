@@ -90,7 +90,7 @@ export default function PostItem({ post }) {
                   router.push(`/user/${post.user.username}`);
                 }}
               >
-                {post.user?.name}
+                {post.user?.username}
               </span>
               <div className="flex gap-1 items-center">
                 <span className="text-gray-500 text-sm md:text-base">

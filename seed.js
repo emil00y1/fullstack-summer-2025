@@ -1,5 +1,5 @@
 const mysql = require("mysql2/promise");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 require("dotenv").config();
 
 async function seed() {
@@ -57,6 +57,8 @@ async function seed() {
         email VARCHAR(100) NOT NULL,
         password VARCHAR(255) NOT NULL,
         avatar VARCHAR(255),
+        bio text,
+        cover VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -113,27 +115,39 @@ async function seed() {
     `);
 
     console.log("Creating indexes for improved performance...");
-    await connection.execute("CREATE INDEX idx_posts_created_at ON posts(created_at)");
-    await connection.execute("CREATE INDEX idx_posts_is_public ON posts(is_public)");
-    await connection.execute("CREATE INDEX idx_posts_user_id ON posts(user_id)");
-    await connection.execute("CREATE INDEX idx_likes_post_id ON likes(post_id)");
-    await connection.execute("CREATE INDEX idx_comments_post_id ON comments(post_id)");
-    await connection.execute("CREATE INDEX idx_follows_follower ON follows(follower_id)");
+    await connection.execute(
+      "CREATE INDEX idx_posts_created_at ON posts(created_at)"
+    );
+    await connection.execute(
+      "CREATE INDEX idx_posts_is_public ON posts(is_public)"
+    );
+    await connection.execute(
+      "CREATE INDEX idx_posts_user_id ON posts(user_id)"
+    );
+    await connection.execute(
+      "CREATE INDEX idx_likes_post_id ON likes(post_id)"
+    );
+    await connection.execute(
+      "CREATE INDEX idx_comments_post_id ON comments(post_id)"
+    );
+    await connection.execute(
+      "CREATE INDEX idx_follows_follower ON follows(follower_id)"
+    );
 
     console.log("Inserting sample users...");
-    const hashedPassword = await bcrypt.hash('password', 10);
+    const hashedPassword = await bcrypt.hash("password", 10);
     await connection.execute(`
-      INSERT INTO users (username, email, password, avatar) VALUES
-      ('john_doe', 'john@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=john_doe'),
-      ('jane_smith', 'jane@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=jane_smith'),
-      ('bob_johnson', 'bob@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=bob_johnson'),
-      ('alice_green', 'alice@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=alice_green'),
-      ('mike_brown', 'mike@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=mike_brown'),
-      ('sara_wilson', 'sara@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=sara_wilson'),
-      ('tom_davis', 'tom@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=tom_davis'),
-      ('emily_jones', 'emily@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=emily_jones'),
-      ('dave_miller', 'dave@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=dave_miller'),
-      ('lisa_taylor', 'lisa@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=lisa_taylor')
+          INSERT INTO users (username, email, password, avatar, bio, cover) VALUES
+          ('john_doe', 'john@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=john_doe', "Software developer with a passion for open-source projects and hiking.", 'https://picsum.photos/seed/john_doe/1200/400'),
+          ('jane_smith', 'jane@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=jane_smith', "Graphic designer who loves creating vibrant visuals and exploring new cuisines.", 'https://picsum.photos/seed/jane_smith/1200/400'),
+          ('bob_johnson', 'bob@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=bob_johnson', "Data analyst by day, avid gamer by night.", 'https://picsum.photos/seed/bob_johnson/1200/400'),
+          ('alice_green', 'alice@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=alice_green', "Environmental enthusiast and blogger focused on sustainable living.", 'https://picsum.photos/seed/alice_green/1200/400'),
+          ('mike_brown', 'mike@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=mike_brown', "Fitness coach dedicated to helping others achieve their health goals.", 'https://picsum.photos/seed/mike_brown/1200/400'),
+          ('sara_wilson', 'sara@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=sara_wilson', "Bookworm and aspiring author with a love for historical fiction.", 'https://picsum.photos/seed/sara_wilson/1200/400'),
+          ('tom_davis', 'tom@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=tom_davis', "Photographer capturing the beauty of everyday moments.", 'https://picsum.photos/seed/tom_davis/1200/400'),
+          ('emily_jones', 'emily@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=emily_jones', "Marketing specialist who enjoys traveling and learning new languages.", 'https://picsum.photos/seed/emily_jones/1200/400'),
+          ('dave_miller', 'dave@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=dave_miller', "Musician and producer with a knack for blending genres.", 'https://picsum.photos/seed/dave_miller/1200/400'),
+          ('lisa_taylor', 'lisa@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=lisa_taylor', "Animal lover and volunteer at local shelters.", 'https://picsum.photos/seed/lisa_taylor/1200/400')
     `);
 
     console.log("Inserting sample posts...");

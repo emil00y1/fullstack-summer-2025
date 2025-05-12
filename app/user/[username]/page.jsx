@@ -51,8 +51,8 @@ export default async function UserProfilePage({ params }) {
       `SELECT c.*, u.username AS post_author, u.avatar, u.email, u.username
        FROM comments c
        JOIN posts p ON c.post_id = p.id
-       JOIN users u ON p.user_id = u.id
-       WHERE c.user_id = ?
+       JOIN users u ON c.user_id = u.id
+       WHERE p.user_id = ?
        ORDER BY c.created_at DESC`,
       [userData.id]
     );
@@ -106,7 +106,11 @@ export default async function UserProfilePage({ params }) {
           postsAmount={posts.length}
         />
         {/* Profile header with avatar */}
-        <ProfileInfo userData={userData} />
+        <ProfileInfo
+          userData={userData}
+          isOwnAccount={currentUserId === userData.id}
+          isFollowing={isFollowing}
+        />
 
         <ClientTabs posts={formattedPosts} comments={formattedComments} />
       </div>

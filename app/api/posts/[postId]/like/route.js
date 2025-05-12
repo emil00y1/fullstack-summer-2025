@@ -9,14 +9,11 @@ export async function POST(request, { params }) {
   const session = await auth();
 
   if (!session || !session.user || !session.user.id) {
-    console.log("Session:", session);
+    "Session:", session;
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const userId = session.user.id;
-
-  console.log("postId:", postId);
-  console.log("userId:", userId);
 
   try {
     // Check if like already exists
@@ -24,8 +21,6 @@ export async function POST(request, { params }) {
       "SELECT id FROM likes WHERE post_id = ? AND user_id = ?",
       [postId, userId]
     );
-
-    console.log("existingLikes:", existingLikes);
 
     if (existingLikes.length > 0) {
       // Unlike - remove the like

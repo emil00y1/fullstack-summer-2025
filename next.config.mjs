@@ -12,15 +12,11 @@ const nextConfig = {
       },
     ],
   },
-  // Your other config options can stay here
-  // webpackDevMiddleware: (config) => {
-  //   config.watchOptions = {
-  //     poll: 300,
-  //     aggregateTimeout: 150,
-  //   };
-  //   return config;
-  // },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
 };
 
-// Keep the ES Module export syntax
 export default nextConfig;
