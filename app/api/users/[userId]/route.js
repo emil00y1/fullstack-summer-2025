@@ -1,10 +1,12 @@
 // app/api/users/[userId]/route.js
 import { NextResponse } from "next/server";
 import { executeQuery } from "@/lib/db";
+import { decryptId } from "@/utils/cryptoUtils";
 
 export async function GET(request, { params }) {
   try {
-    const { userId } = params;
+    const { userId: encryptedUserId } = params;
+    const userId = decryptId(encryptedUserId);
 
     if (!userId || typeof userId !== "string") {
       return NextResponse.json({ error: "Invalid userId" }, { status: 400 });
@@ -13,7 +15,7 @@ export async function GET(request, { params }) {
     // Fetch user data
     const user = await executeQuery(
       `SELECT id, username, email, avatar, bio, cover, 
-       created_at AS createdAt,
+       created_at AS createdAt
        FROM users 
        WHERE id = ?`,
       [userId]

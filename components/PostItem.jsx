@@ -1,4 +1,3 @@
-// components/PostItem.jsx
 "use client";
 import { useState } from "react";
 import { Heart, MessageSquare, Repeat } from "lucide-react";
@@ -17,17 +16,19 @@ export default function PostItem({ post }) {
   );
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [isReposted, setIsReposted] = useState(false);
-  const [repostCount, setRepostCount] = useState(0);
+  const [repostCount, setRepostCount] = useState(post.repostCount || 0);
 
-  // Format date with our custom function
   const createdAt = post.createdAt ? formatTimeAgo(post.createdAt) : "recently";
 
   const handleLike = async (e) => {
-    e.preventDefault(); // Prevent clicking through to post page
-    if (!session) return;
+    e.preventDefault();
+    if (!session) {
+      router.push("/login");
+      return;
+    }
 
     try {
-      const endpoint = `/api/posts/${post.id}/like`;
+      const endpoint = `/api/posts/${post.encryptedId}/like`;
       const method = isLiked ? "DELETE" : "POST";
 
       const response = await fetch(endpoint, { method });
@@ -35,6 +36,8 @@ export default function PostItem({ post }) {
       if (response.ok) {
         setIsLiked(!isLiked);
         setLikesCount((prevCount) => (isLiked ? prevCount - 1 : prevCount + 1));
+      } else {
+        throw new Error("Failed to toggle like");
       }
     } catch (error) {
       console.error("Error toggling like:", error);
@@ -42,26 +45,25 @@ export default function PostItem({ post }) {
   };
 
   const handleRepost = async (e) => {
-    e.preventDefault(); // Prevent clicking through to post page
-    if (!session) return;
+    e.preventDefault();
+    if (!session) {
+      router.push("/login");
+      return;
+    }
 
-    // Toggle repost state for immediate feedback
     setIsReposted(!isReposted);
     setRepostCount((prev) => (isReposted ? prev - 1 : prev + 1));
-
-    // In a real app, you'd implement an API call for reposting
   };
 
   const handleCommentClick = (e) => {
-    e.preventDefault(); // Prevent default link behavior
-    router.push(`/posts/${post.id}#comment-input`);
+    e.preventDefault();
+    router.push(`/posts/${post.encryptedId}#comment-input`);
   };
 
   return (
-    <Link href={`/posts/${post.id}`} className="block">
+    <Link href={`/posts/${post.encryptedId}`} className="block">
       <div className="px-1 py-2 md:p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors">
         <div className="flex gap-3">
-          {/* Avatar */}
           <div
             onClick={(e) => {
               e.preventDefault();
@@ -78,10 +80,7 @@ export default function PostItem({ post }) {
               </AvatarFallback>
             </Avatar>
           </div>
-
-          {/* Post content */}
           <div className="flex-1">
-            {/* Post header */}
             <div className="md:flex items-center gap-1">
               <span
                 className="font-semibold hover:underline cursor-pointer"
@@ -94,7 +93,7 @@ export default function PostItem({ post }) {
               </span>
               <div className="flex gap-1 items-center">
                 <span className="text-gray-500 text-sm md:text-base">
-                  @{post.user?.username || post.user?.email?.split("@")[0]}
+                  @{post.user?.username}
                 </span>
                 <span className="text-gray-500">·</span>
                 <span className="text-gray-500 text-xs md:text-sm">
@@ -102,8 +101,6 @@ export default function PostItem({ post }) {
                 </span>
               </div>
             </div>
-
-            {/* Post body */}
             <div className="mt-2 md:mt-1">
               <p className="whitespace-pre-line">{post.body}</p>
               {post.image && (
@@ -116,8 +113,6 @@ export default function PostItem({ post }) {
                 </div>
               )}
             </div>
-
-            {/* Action buttons */}
             <div className="flex justify-between mt-3">
               <Button
                 onClick={handleCommentClick}
@@ -128,7 +123,6 @@ export default function PostItem({ post }) {
                 <MessageSquare className="h-4 w-4 mr-1" />
                 <span>{post.commentsCount || 0}</span>
               </Button>
-
               <div>
                 <Button
                   onClick={handleRepost}
@@ -143,7 +137,6 @@ export default function PostItem({ post }) {
                   <Repeat className="h-4 w-4 mr-1" />
                   <span>{repostCount}</span>
                 </Button>
-
                 <Button
                   onClick={handleLike}
                   variant="ghost"

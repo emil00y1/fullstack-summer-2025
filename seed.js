@@ -1,5 +1,6 @@
 const mysql = require("mysql2/promise");
 const bcrypt = require("bcrypt");
+const { v4: uuidv4 } = require("uuid"); // Added for UUID4 generation
 require("dotenv").config();
 
 async function seed() {
@@ -52,12 +53,12 @@ async function seed() {
     console.log("Creating users table...");
     await connection.execute(`
       CREATE TABLE users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) NOT NULL,
-        email VARCHAR(100) NOT NULL,
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        username VARCHAR(25) NOT NULL UNIQUE,
+        email VARCHAR(100) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
         avatar VARCHAR(255),
-        bio text,
+        bio TEXT,
         cover VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -66,8 +67,8 @@ async function seed() {
     console.log("Creating posts table...");
     await connection.execute(`
       CREATE TABLE posts (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        user_id CHAR(36) NOT NULL,
         content TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_public BOOLEAN DEFAULT TRUE,
@@ -78,9 +79,9 @@ async function seed() {
     console.log("Creating likes table...");
     await connection.execute(`
       CREATE TABLE likes (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        post_id INT NOT NULL,
-        user_id INT NOT NULL,
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        post_id CHAR(36) NOT NULL,
+        user_id CHAR(36) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (post_id) REFERENCES posts(id),
         FOREIGN KEY (user_id) REFERENCES users(id),
@@ -91,9 +92,9 @@ async function seed() {
     console.log("Creating comments table...");
     await connection.execute(`
       CREATE TABLE comments (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        post_id INT NOT NULL,
-        user_id INT NOT NULL,
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        post_id CHAR(36) NOT NULL,
+        user_id CHAR(36) NOT NULL,
         content TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (post_id) REFERENCES posts(id),
@@ -104,9 +105,9 @@ async function seed() {
     console.log("Creating follows table...");
     await connection.execute(`
       CREATE TABLE follows (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        follower_id INT NOT NULL,
-        following_id INT NOT NULL,
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        follower_id CHAR(36) NOT NULL,
+        following_id CHAR(36) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (follower_id) REFERENCES users(id),
         FOREIGN KEY (following_id) REFERENCES users(id),
@@ -136,25 +137,112 @@ async function seed() {
 
     console.log("Inserting sample users...");
     const hashedPassword = await bcrypt.hash("password", 10);
-    await connection.execute(`
-          INSERT INTO users (username, email, password, avatar, bio, cover) VALUES
-          ('john_doe', 'john@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=john_doe', "Software developer with a passion for open-source projects and hiking.", 'https://picsum.photos/seed/john_doe/1200/400'),
-          ('jane_smith', 'jane@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=jane_smith', "Graphic designer who loves creating vibrant visuals and exploring new cuisines.", 'https://picsum.photos/seed/jane_smith/1200/400'),
-          ('bob_johnson', 'bob@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=bob_johnson', "Data analyst by day, avid gamer by night.", 'https://picsum.photos/seed/bob_johnson/1200/400'),
-          ('alice_green', 'alice@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=alice_green', "Environmental enthusiast and blogger focused on sustainable living.", 'https://picsum.photos/seed/alice_green/1200/400'),
-          ('mike_brown', 'mike@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=mike_brown', "Fitness coach dedicated to helping others achieve their health goals.", 'https://picsum.photos/seed/mike_brown/1200/400'),
-          ('sara_wilson', 'sara@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=sara_wilson', "Bookworm and aspiring author with a love for historical fiction.", 'https://picsum.photos/seed/sara_wilson/1200/400'),
-          ('tom_davis', 'tom@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=tom_davis', "Photographer capturing the beauty of everyday moments.", 'https://picsum.photos/seed/tom_davis/1200/400'),
-          ('emily_jones', 'emily@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=emily_jones', "Marketing specialist who enjoys traveling and learning new languages.", 'https://picsum.photos/seed/emily_jones/1200/400'),
-          ('dave_miller', 'dave@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=dave_miller', "Musician and producer with a knack for blending genres.", 'https://picsum.photos/seed/dave_miller/1200/400'),
-          ('lisa_taylor', 'lisa@example.com', '${hashedPassword}', 'https://api.dicebear.com/6.x/avataaars/svg?seed=lisa_taylor', "Animal lover and volunteer at local shelters.", 'https://picsum.photos/seed/lisa_taylor/1200/400')
-    `);
+    const users = [
+      {
+        id: uuidv4(),
+        username: "john_doe",
+        email: "john@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=john_doe",
+        bio: "Software developer with a passion for open-source projects and hiking.",
+        cover: "https://picsum.photos/seed/john_doe/1200/400",
+      },
+      {
+        id: uuidv4(),
+        username: "jane_smith",
+        email: "jane@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=jane_smith",
+        bio: "Graphic designer who loves creating vibrant visuals and exploring new cuisines.",
+        cover: "https://picsum.photos/seed/jane_smith/1200/400",
+      },
+      {
+        id: uuidv4(),
+        username: "bob_johnson",
+        email: "bob@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=bob_johnson",
+        bio: "Data analyst by day, avid gamer by night.",
+        cover: "https://picsum.photos/seed/bob_johnson/1200/400",
+      },
+      {
+        id: uuidv4(),
+        username: "alice_green",
+        email: "alice@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=alice_green",
+        bio: "Environmental enthusiast and blogger focused on sustainable living.",
+        cover: "https://picsum.photos/seed/alice_green/1200/400",
+      },
+      {
+        id: uuidv4(),
+        username: "mike_brown",
+        email: "mike@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=mike_brown",
+        bio: "Fitness coach dedicated to helping others achieve their health goals.",
+        cover: "https://picsum.photos/seed/mike_brown/1200/400",
+      },
+      {
+        id: uuidv4(),
+        username: "sara_wilson",
+        email: "sara@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=sara_wilson",
+        bio: "Bookworm and aspiring author with a love for historical fiction.",
+        cover: "https://picsum.photos/seed/sara_wilson/1200/400",
+      },
+      {
+        id: uuidv4(),
+        username: "tom_davis",
+        email: "tom@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=tom_davis",
+        bio: "Photographer capturing the beauty of everyday moments.",
+        cover: "https://picsum.photos/seed/tom_davis/1200/400",
+      },
+      {
+        id: uuidv4(),
+        username: "emily_jones",
+        email: "emily@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=emily_jones",
+        bio: "Marketing specialist who enjoys traveling and learning new languages.",
+        cover: "https://picsum.photos/seed/emily_jones/1200/400",
+      },
+      {
+        id: uuidv4(),
+        username: "dave_miller",
+        email: "dave@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=dave_miller",
+        bio: "Musician and producer with a knack for blending genres.",
+        cover: "https://picsum.photos/seed/dave_miller/1200/400",
+      },
+      {
+        id: uuidv4(),
+        username: "lisa_taylor",
+        email: "lisa@example.com",
+        avatar: "https://api.dicebear.com/6.x/avataaars/svg?seed=lisa_taylor",
+        bio: "Animal lover and volunteer at local shelters.",
+        cover: "https://picsum.photos/seed/lisa_taylor/1200/400",
+      },
+    ];
+
+    for (const user of users) {
+      await connection.execute(
+        `
+        INSERT INTO users (id, username, email, password, avatar, bio, cover)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+        [
+          user.id,
+          user.username,
+          user.email,
+          hashedPassword,
+          user.avatar,
+          user.bio,
+          user.cover,
+        ]
+      );
+    }
 
     console.log("Inserting sample posts...");
     const sampleContents = [
       "Just had an amazing cup of coffee!",
       "Working on a new project today.",
-      "Can\\'t wait for the weekend!",
+      "Can't wait for the weekend!",
       "Thinking about learning a new programming language.",
       "Just finished an interesting book about web development.",
       "Having a great day at the beach.",
@@ -164,28 +252,33 @@ async function seed() {
       "Excited about the upcoming tech conference.",
     ];
 
+    const postIds = [];
     for (let i = 0; i < 100; i++) {
-      const userId = Math.floor(Math.random() * 10) + 1;
+      const postId = uuidv4();
+      const userIndex = Math.floor(Math.random() * users.length);
+      const userId = users[userIndex].id;
       const contentIndex = i % sampleContents.length;
       const isPublic = Math.random() > 0.1 ? 1 : 0;
       const content = sampleContents[contentIndex];
       await connection.execute(
-        "INSERT INTO posts (user_id, content, is_public) VALUES (?, ?, ?)",
-        [userId, content, isPublic]
+        "INSERT INTO posts (id, user_id, content, is_public) VALUES (?, ?, ?, ?)",
+        [postId, userId, content, isPublic]
       );
+      postIds.push(postId);
     }
 
     console.log("Inserting sample likes...");
     const addedLikes = new Set();
     for (let i = 0; i < 500; i++) {
-      const postId = Math.floor(Math.random() * 100) + 1;
-      const userId = Math.floor(Math.random() * 10) + 1;
+      const postId = postIds[Math.floor(Math.random() * postIds.length)];
+      const userIndex = Math.floor(Math.random() * users.length);
+      const userId = users[userIndex].id;
       const likeKey = `${postId}-${userId}`;
       if (!addedLikes.has(likeKey)) {
         addedLikes.add(likeKey);
         await connection.execute(
-          "INSERT INTO likes (post_id, user_id) VALUES (?, ?)",
-          [postId, userId]
+          "INSERT INTO likes (id, post_id, user_id) VALUES (?, ?, ?)",
+          [uuidv4(), postId, userId]
         );
       }
     }
@@ -197,7 +290,7 @@ async function seed() {
       "Interesting perspective.",
       "Thanks for sharing!",
       "This made my day.",
-      "I\\'ve been thinking the same thing.",
+      "I've been thinking the same thing.",
       "Have you considered trying this approach?",
       "Keep up the good work!",
       "Can you explain more about this?",
@@ -205,14 +298,34 @@ async function seed() {
     ];
 
     for (let i = 0; i < 200; i++) {
-      const postId = Math.floor(Math.random() * 100) + 1;
-      const userId = Math.floor(Math.random() * 10) + 1;
+      const postId = postIds[Math.floor(Math.random() * postIds.length)];
+      const userIndex = Math.floor(Math.random() * users.length);
+      const userId = users[userIndex].id;
       const commentIndex = i % sampleComments.length;
       const content = sampleComments[commentIndex];
       await connection.execute(
-        "INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)",
-        [postId, userId, content]
+        "INSERT INTO comments (id, post_id, user_id, content) VALUES (?, ?, ?, ?)",
+        [uuidv4(), postId, userId, content]
       );
+    }
+
+    console.log("Inserting sample follows...");
+    const addedFollows = new Set();
+    for (let i = 0; i < 50; i++) {
+      const followerIndex = Math.floor(Math.random() * users.length);
+      const followingIndex = Math.floor(Math.random() * users.length);
+      if (followerIndex !== followingIndex) {
+        const followerId = users[followerIndex].id;
+        const followingId = users[followingIndex].id;
+        const followKey = `${followerId}-${followingId}`;
+        if (!addedFollows.has(followKey)) {
+          addedFollows.add(followKey);
+          await connection.execute(
+            "INSERT INTO follows (id, follower_id, following_id) VALUES (?, ?, ?)",
+            [uuidv4(), followerId, followingId]
+          );
+        }
+      }
     }
 
     console.log("Seeding completed successfully!");

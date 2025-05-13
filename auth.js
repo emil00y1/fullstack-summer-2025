@@ -8,7 +8,12 @@ const signInSchema = z.object({
   password: z
     .string()
     .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters"),
+    .min(6, "Password must be at least 6 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(
+      /[!*&?,.-_]/,
+      "Password must contain at least one special character (!*&?,.-_)"
+    ),
 });
 
 // Determine the base URL based on environment with fallback
@@ -17,6 +22,8 @@ if (!baseUrl || !baseUrl.startsWith("http")) {
   console.error("Invalid NEXTAUTH_URL, falling back to default:", baseUrl);
   throw new Error("NEXTAUTH_URL is not properly configured");
 }
+
+const sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -28,6 +35,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         try {
+          // Check for empty fields first
+          if (!credentials?.email) {
+            throw new Error("Email is required");
+          }
+          if (!credentials?.password) {
+            throw new Error("Password is required");
+          }
+
           // Validate credentials with Zod
           const { email, password } = await signInSchema.parseAsync(
             credentials
@@ -43,17 +58,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
 
           if (!response.ok) {
-            const error = await response.json();
-            if (response.status === 401) {
-              throw new Error(error.error || "Invalid credentials");
-            } else {
-              throw new Error(error.error || "Authentication failed");
-            }
+            throw new Error("Invalid credentials");
           }
 
           const user = await response.json();
           return {
-            id: user.id.toString(),
+            id: user.id, // UUID is already a string
             username: user.username,
             email: user.email,
             createdAt: user.created_at,
@@ -62,8 +72,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             avatar: user.avatar, // Added avatar field
           };
         } catch (error) {
-          console.error("Authentication error:", error);
-          return null;
+          // If error is not about missing fields, return generic error
+          if (
+            error.message !== "Email is required" &&
+            error.message !== "Password is required"
+          ) {
+            console.error("Authentication error:", error.message);
+            throw new Error("Invalid credentials");
+          }
+          // Rethrow missing field errors
+          throw error;
         }
       },
     }),
@@ -71,25 +89,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id; // UUID string
         token.username = user.username;
         token.email = user.email;
         token.createdAt = user.createdAt;
-        token.bio = user.bio; // Bio in token
-        token.cover = user.cover; // Cover in token
-        token.avatar = user.avatar; // Avatar in token
+        token.bio = user.bio;
+        token.cover = user.cover;
+        token.avatar = user.avatar;
+        token.lastActive = Date.now();
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id;
+        session.user.id = token.id; // UUID string
         session.user.username = token.username;
         session.user.email = token.email;
         session.user.createdAt = token.createdAt;
-        session.user.bio = token.bio; // Bio in session
-        session.user.cover = token.cover; // Cover in session
-        session.user.avatar = token.avatar; // Avatar in session
+        session.user.bio = token.bio;
+        session.user.cover = token.cover;
+        session.user.avatar = token.avatar;
+        session.user.lastActive = token.lastActive;
       }
       return session;
     },
@@ -99,6 +119,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: sessionTimeout / 1000, // Session expires after 24 hours of inactivity
   },
   secret: process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET,
 });

@@ -1,4 +1,3 @@
-// app/posts/[postId]/page.jsx
 import { auth } from "@/auth";
 import { executeQuery } from "@/lib/db";
 import PostItem from "@/components/PostItem";
@@ -8,12 +7,36 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { SessionProvider } from "next-auth/react";
 import BackButton from "@/components/BackButton";
+import { decryptId, encryptId } from "@/utils/cryptoUtils";
 
 export default async function PostPage({ params }) {
-  const { postId } = params;
+  const { postId: encryptedPostId } = params;
+  let postId;
+  try {
+    postId = decryptId(encryptedPostId);
+  } catch (error) {
+    return (
+      <div className="max-w-xl mx-auto p-4">
+        <div className="flex items-center p-4">
+          <Link href="/">
+            <Button variant="ghost">←</Button>
+          </Link>
+          <h1 className="text-xl font-bold ml-4">Invalid Post</h1>
+        </div>
+        <div className="text-center py-8">
+          <p>
+            The post you're looking for doesn't exist or the link is invalid.
+          </p>
+          <Link href="/" className="text-blue-500 mt-4 block">
+            Return to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const session = await auth();
-  
-  // Fetch the post - removed u.name from the query
+
   const posts = await executeQuery(
     `SELECT 
       p.id, 
@@ -31,7 +54,7 @@ export default async function PostPage({ params }) {
     WHERE p.id = ?`,
     [postId]
   );
-  
+
   if (posts.length === 0) {
     return (
       <div className="max-w-xl mx-auto p-4">
@@ -50,26 +73,21 @@ export default async function PostPage({ params }) {
       </div>
     );
   }
-  
+
   const post = {
-    id: posts[0].id,
+    encryptedId: encryptedPostId,
     body: posts[0].content,
     createdAt: posts[0].created_at,
-    userId: posts[0].user_id,
     likesCount: posts[0].like_count,
     commentsCount: posts[0].comment_count,
-    isPublic: posts[0].is_public === 1,
     user: {
-      id: posts[0].user_id,
       username: posts[0].username,
       avatar: posts[0].avatar,
       name: posts[0].username,
-      email: posts[0].email,
     },
-    likes: []
+    likes: [],
   };
-  
-  // Fetch comments for this post - removed u.name from the query
+
   const comments = await executeQuery(
     `SELECT 
       c.id, 
@@ -87,42 +105,33 @@ export default async function PostPage({ params }) {
     ORDER BY c.created_at DESC`,
     [postId]
   );
-  
-  // Format comments
-  const formattedComments = comments.map(comment => ({
-    id: comment.id,
+
+  const formattedComments = comments.map((comment) => ({
+    encryptedId: encryptId(comment.id),
     body: comment.body,
     createdAt: comment.created_at,
-    userId: comment.user_id,
-    postId: comment.post_id,
+    postId: encryptId(comment.post_id),
     likesCount: comment.like_count || 0,
     user: {
-      id: comment.user_id,
       username: comment.username,
       name: comment.username,
-      email: comment.email,
-      avatar: comment.avatar,  
+      avatar: comment.avatar,
     },
-    likes: []
+    likes: [],
   }));
-  
+
   return (
     <div className="max-w-xl mx-auto p-4">
-      {/* Header */}
       <div className="flex items-center p-4 border-b">
-      <BackButton href="/"/>
+        <BackButton href="/" />
         <h1 className="text-xl font-bold ml-4">Post</h1>
       </div>
-      
-      {/* Main post */}
       <div className="border-b">
-            <PostItem post={post} />
+        <PostItem post={post} />
       </div>
-      
-      {/* Comment form */}
       <div className="py-2 px-4 border-b" id="comment-section">
         {session ? (
-            <CommentForm postId={postId} />
+          <CommentForm encryptedPostId={encryptedPostId} />
         ) : (
           <div className="py-4 text-center">
             <Link href="/login" className="text-blue-500">
@@ -131,22 +140,20 @@ export default async function PostPage({ params }) {
           </div>
         )}
       </div>
-      
-      {/* Comments */}
       <div className="divide-y">
         {formattedComments.length === 0 ? (
           <div className="py-8 text-center text-gray-500">
             No replies yet. Be the first to reply!
           </div>
         ) : (
-              formattedComments.map(comment => (
-                <CommentItem 
-                  key={comment.id}
-                  comment={comment}
-                  showParentPost={false}
-                />
-              ))
-          )}
+          formattedComments.map((comment) => (
+            <CommentItem
+              key={comment.encryptedId}
+              comment={comment}
+              showParentPost={false}
+            />
+          ))
+        )}
       </div>
     </div>
   );
