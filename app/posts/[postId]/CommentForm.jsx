@@ -67,9 +67,7 @@ export default function CommentForm({ postId }) {
 
       <div className="flex-1">
         <div className="md:flex items-center gap-1">
-          <p className="font-semibold hover:underline">
-            {session.user.username}
-          </p>
+          <p className="font-semibold">{session.user.username}</p>
           <span className="text-gray-500 text-sm md:text-base">
             @{session.user.username}
           </span>

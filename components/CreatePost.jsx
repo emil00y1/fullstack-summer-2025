@@ -1,4 +1,3 @@
-// components/CreatePost.jsx
 "use client";
 
 import { useState } from "react";
@@ -8,16 +7,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function CreatePost() {
   const { data: session, status } = useSession();
   const [post, setPost] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const MAX_CHARS = 280;
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Don't proceed if not logged in or if content is invalid
     if (
       status !== "authenticated" ||
       !session?.user?.id ||
@@ -46,17 +46,31 @@ export function CreatePost() {
         throw new Error(data.error || "Failed to create post");
       }
 
-      // Show success toast notification
+      // Extract encryptedId from response
+      const { encryptedId } = data;
+
+      // Show success toast with option to view post
       toast.success("Post created", {
-        description: "Your post has been published successfully",
-        duration: 1500,
+        description: (
+          <span>
+            Your post has been published!{" "}
+            <button
+              onClick={() => router.push(`/posts/${encryptedId}`)}
+              className="text-blue-500 underline hover:text-blue-700"
+            >
+              View post
+            </button>
+          </span>
+        ),
+        duration: 3000,
       });
 
       // Clear the form
       setPost("");
+      // Optionally navigate to the new post (uncomment if desired)
+      // router.push(`/posts/${encryptedId}`);
     } catch (error) {
       console.error("Error creating post:", error);
-      // Show error toast notification
       toast.error("Failed to create post", {
         description: "Please try again later",
         duration: 3000,
@@ -67,7 +81,7 @@ export function CreatePost() {
   };
 
   return (
-    <div className="w-full max-w-xl  rounded-xl px-1 py-2 md:p-4">
+    <div className="w-full max-w-xl rounded-xl px-1 py-2 md:p-4">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-3">
           <div className="flex-1 flex flex-col gap-3">

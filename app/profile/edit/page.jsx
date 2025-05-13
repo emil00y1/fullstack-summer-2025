@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import BioTextarea from "@/components/BioTextarea";
 import BackButton from "@/components/BackButton";
+import { put } from "@vercel/blob";
 
 // Maximum file sizes
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
@@ -34,7 +35,7 @@ async function updateProfile(formData) {
     const username = formData.get("username");
     const bio = formData.get("bio") || "";
 
-    // Validate inputs
+    // Validate inputs - no changes here
     if (!username || username.length < 3 || username.length > 30) {
       return { error: "Username must be between 3 and 30 characters" };
     }
@@ -43,7 +44,7 @@ async function updateProfile(formData) {
       return { error: "Bio must not exceed 160 characters" };
     }
 
-    // Check if username is already taken
+    // Check if username is already taken - no changes here
     const existingUser = await executeQuery(
       "SELECT id FROM users WHERE username = ? AND id != ?",
       [username, userId]
@@ -59,6 +60,9 @@ async function updateProfile(formData) {
       bio,
     };
 
+    // Get environment
+    const isProduction = process.env.NODE_ENV === "production";
+
     // Process avatar file if uploaded
     const avatarFile = formData.get("avatar");
     if (avatarFile && avatarFile.size > 0) {
@@ -70,21 +74,37 @@ async function updateProfile(formData) {
       try {
         const avatarBuffer = Buffer.from(await avatarFile.arrayBuffer());
         const avatarFilename = `avatar-${userId}-${uuidv4()}.webp`;
-        const avatarPath = `/uploads/avatars/${avatarFilename}`;
-        const fullAvatarPath = join(process.cwd(), "public", avatarPath);
 
-        // Create directory if it doesn't exist
-        await mkdir(join(process.cwd(), "public", "uploads", "avatars"), {
-          recursive: true,
-        });
-
-        // Resize and optimize avatar image
-        await sharp(avatarBuffer)
+        // Process the image with sharp
+        const processedAvatar = await sharp(avatarBuffer)
           .resize(200, 200, { fit: "cover" })
-          .webp({ quality: 80 })
-          .toFile(fullAvatarPath);
+          .webp({ quality: 80 });
 
-        updateData.avatar = avatarPath;
+        // Handle based on environment
+        if (isProduction) {
+          // PRODUCTION: Upload to Vercel Blob
+          const { url: avatarUrl } = await put(
+            `avatars/${avatarFilename}`,
+            await processedAvatar.toBuffer(),
+            { access: "public" }
+          );
+
+          updateData.avatar = avatarUrl;
+        } else {
+          // DEVELOPMENT: Save to local filesystem
+          const avatarPath = `/uploads/avatars/${avatarFilename}`;
+          const fullAvatarPath = join(process.cwd(), "public", avatarPath);
+
+          // Create directory if it doesn't exist
+          await mkdir(join(process.cwd(), "public", "uploads", "avatars"), {
+            recursive: true,
+          });
+
+          // Save the file locally
+          await processedAvatar.toFile(fullAvatarPath);
+
+          updateData.avatar = avatarPath;
+        }
       } catch (err) {
         console.error("Error processing avatar:", err);
         return { error: "Failed to process avatar image" };
@@ -102,39 +122,55 @@ async function updateProfile(formData) {
       try {
         const coverBuffer = Buffer.from(await coverFile.arrayBuffer());
         const coverFilename = `cover-${userId}-${uuidv4()}.webp`;
-        const coverPath = `/uploads/covers/${coverFilename}`;
-        const fullCoverPath = join(process.cwd(), "public", coverPath);
 
-        // Create directory if it doesn't exist
-        await mkdir(join(process.cwd(), "public", "uploads", "covers"), {
-          recursive: true,
-        });
-
-        // Resize and optimize cover image
-        await sharp(coverBuffer)
+        // Process the image with sharp
+        const processedCover = await sharp(coverBuffer)
           .resize(1500, 500, { fit: "cover" })
-          .webp({ quality: 80 })
-          .toFile(fullCoverPath);
+          .webp({ quality: 80 });
 
-        updateData.cover = coverPath;
+        // Handle based on environment
+        if (isProduction) {
+          // PRODUCTION: Upload to Vercel Blob
+          const { url: coverUrl } = await put(
+            `covers/${coverFilename}`,
+            await processedCover.toBuffer(),
+            { access: "public" }
+          );
+
+          updateData.cover = coverUrl;
+        } else {
+          // DEVELOPMENT: Save to local filesystem
+          const coverPath = `/uploads/covers/${coverFilename}`;
+          const fullCoverPath = join(process.cwd(), "public", coverPath);
+
+          // Create directory if it doesn't exist
+          await mkdir(join(process.cwd(), "public", "uploads", "covers"), {
+            recursive: true,
+          });
+
+          // Save the file locally
+          await processedCover.toFile(fullCoverPath);
+
+          updateData.cover = coverPath;
+        }
       } catch (err) {
         console.error("Error processing cover:", err);
         return { error: "Failed to process cover image" };
       }
     }
 
-    // Build the SQL query
+    // Build the SQL query - no changes here
     const fields = Object.keys(updateData);
     const fieldAssignments = fields.map((field) => `${field} = ?`).join(", ");
     const values = Object.values(updateData);
 
-    // Execute the update
+    // Execute the update - no changes here
     await executeQuery(`UPDATE users SET ${fieldAssignments} WHERE id = ?`, [
       ...values,
       userId,
     ]);
 
-    // Revalidate the profile page
+    // Revalidate the profile page - no changes here
     revalidatePath("/profile");
 
     return { success: true };
@@ -181,7 +217,7 @@ export default async function EditProfilePage() {
   return (
     <div>
       <BackButton />
-      <div className="px-6 mt-4">
+      <div className="px-6 py-4">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight">Edit Profile</h1>

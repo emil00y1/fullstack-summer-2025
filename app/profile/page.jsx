@@ -1,24 +1,20 @@
-// app/profile/page.jsx
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import ClientTabs from "@/components/profile/ClientTabs";
 import { executeQuery } from "@/lib/db";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileInfo from "@/components/profile/ProfileInfo";
+import { encryptId } from "@/utils/cryptoUtils";
 
 export default async function ProfilePage() {
-  // Get session using auth()
   const session = await auth();
 
-  // Redirect if no session
   if (!session || !session.user) {
     redirect("/login");
   }
 
   const userId = session.user.id;
 
-  // Fetch user posts directly from the database instead of using API route
-  // This ensures we're using the exact same userId from the session
   const posts = await executeQuery(
     `SELECT 
       p.id, 
@@ -38,26 +34,22 @@ export default async function ProfilePage() {
     [userId]
   );
 
-  // Format posts to match the expected structure
   const formattedPosts = posts.map((post) => ({
-    id: post.id,
+    encryptedId: encryptId(post.id),
     body: post.content,
     createdAt: post.created_at,
-    userId: post.user_id,
     likesCount: post.like_count,
     commentsCount: post.comment_count,
     isPublic: post.is_public === 1,
     user: {
-      id: post.user_id,
       username: post.username,
-      email: post.email,
       avatar: post.avatar,
+      name: post.username,
     },
     comments: [],
     likes: [],
   }));
 
-  // Fetch user comments directly from database
   const comments = await executeQuery(
     `SELECT 
       c.id, 
@@ -67,6 +59,7 @@ export default async function ProfilePage() {
       c.post_id,
       u.username,
       u.email,
+      u.avatar,
       p.content as post_content,
       pu.username as post_username,
       pu.id as post_user_id,
@@ -80,41 +73,34 @@ export default async function ProfilePage() {
     [userId]
   );
 
-  // Format comments
   const formattedComments = comments.map((comment) => ({
-    id: comment.id,
+    encryptedId: encryptId(comment.id),
     body: comment.body,
     createdAt: comment.created_at,
-    userId: comment.user_id,
-    postId: comment.post_id,
+    postId: encryptId(comment.post_id),
     likesCount: comment.like_count || 0,
     user: {
-      id: comment.user_id,
       username: comment.username,
-      email: comment.email,
       avatar: comment.avatar,
+      name: comment.username,
     },
     post: {
-      id: comment.post_id,
+      encryptedId: encryptId(comment.post_id),
       body: comment.post_content,
       user: {
-        id: comment.post_user_id,
         username: comment.post_username,
       },
     },
     likes: [],
   }));
 
-  // User data from session
   const sessionUser = session.user;
 
-  // Fetch user data with bio and cover
   const user = await executeQuery(
     "SELECT avatar, bio, cover FROM users WHERE id = ?",
     [userId]
   );
 
-  // Combine session user data with bio and cover
   const userData = {
     ...sessionUser,
     avatar: user[0]?.avatar || null,
@@ -131,7 +117,6 @@ export default async function ProfilePage() {
 
       <ProfileInfo userData={userData} isOwnAccount={true} />
 
-      {/* Tabs using client component wrapper */}
       <ClientTabs posts={formattedPosts} comments={formattedComments} />
     </div>
   );

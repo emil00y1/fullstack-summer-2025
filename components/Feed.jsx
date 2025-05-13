@@ -14,7 +14,6 @@ export default function Feed() {
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
 
-  // Reference to observe for intersection
   const observerTarget = useRef(null);
 
   const fetchPosts = async (reset = false) => {
@@ -32,34 +31,22 @@ export default function Feed() {
       }
 
       const data = await response.json();
+      const fetchedPosts = Array.isArray(data) ? data : [];
 
-      // Check if data.posts exists and is an array
-      const fetchedPosts = Array.isArray(data.posts) ? data.posts : [];
+      const formattedPosts = fetchedPosts.map((post) => ({
+        encryptedId: post.encryptedId,
+        body: post.content,
+        createdAt: post.created_at,
+        likesCount: post.like_count,
+        commentsCount: post.comment_count,
+        user: {
+          username: post.user.username,
+          name: post.user.username,
+          avatar: post.user.avatar,
+        },
+        likes: [],
+      }));
 
-      // Transform the fetched posts to match the expected format for PostItem
-      const formattedPosts = fetchedPosts.map((post) => {
-        return {
-          id: post.id,
-          body: post.content, // Convert 'content' to 'body' expected by PostItem
-          createdAt: post.created_at, // Convert 'created_at' to 'createdAt'
-          userId: post.user_id, // Map 'user_id' to 'userId'
-          likesCount: post.like_count, // Map 'like_count' to 'likesCount'
-          commentsCount: post.comment_count, // Map 'comment_count' to 'commentsCount'
-          isPublic: post.is_public === 1, // Convert 'is_public' to boolean
-          user: {
-            id: post.user_id,
-            username: post.username,
-            email: post.email,
-            name: post.username, // Use username as name if name is not provided
-            avatar: post.avatar, // Default image to null if not provided
-          },
-          // Add empty arrays for these properties that PostItem expects
-          comments: [],
-          likes: [],
-        };
-      });
-
-      // Set hasMore flag based on returned posts count
       if (fetchedPosts.length < limit) {
         setHasMore(false);
       }
@@ -73,30 +60,25 @@ export default function Feed() {
       }
     } catch (error) {
       console.error("Error fetching posts:", error);
-      // You could add a toast notification here
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Initial load
   useEffect(() => {
     fetchPosts(true);
   }, []);
 
-  // Setup intersection observer for infinite scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        // If the target is visible and we have more posts to load
         if (entries[0].isIntersecting && hasMore && !isLoading) {
           fetchPosts();
         }
       },
-      { threshold: 0.5 } // Trigger when 50% of the element is visible
+      { threshold: 0.5 }
     );
 
-    // If we have a target and posts have loaded
     if (observerTarget.current && posts.length > 0) {
       observer.observe(observerTarget.current);
     }
@@ -127,17 +109,15 @@ export default function Feed() {
       ) : (
         <div className="space-y-4">
           <SessionProvider>
-            {posts.map((post) => {
-              return <PostItem key={post.id} post={post} />;
-            })}
+            {posts.map((post) => (
+              <PostItem key={post.encryptedId} post={post} />
+            ))}
           </SessionProvider>
 
-          {/* Intersection Observer Target - place after loaded posts */}
           {posts.length > 0 && hasMore && (
             <div ref={observerTarget} className="h-4" />
           )}
 
-          {/* Loading skeleton */}
           {isLoading && (
             <div className="space-y-4">
               {[...Array(3)].map((_, index) => (
@@ -161,7 +141,6 @@ export default function Feed() {
             </div>
           )}
 
-          {/* End of feed message */}
           {!hasMore && posts.length > 0 && (
             <div className="text-center py-4 text-gray-500">
               You've reached the end of the timeline

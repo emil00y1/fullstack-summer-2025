@@ -1,4 +1,3 @@
-// app/profile/ClientTabs.jsx
 "use client";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +28,7 @@ export default function ClientTabs({ posts, comments }) {
         ) : (
           <div className="divide-y">
             {posts.map((post) => (
-              <PostItem key={post.id} post={post} />
+              <PostItem key={post.encryptedId} post={post} />
             ))}
           </div>
         )}
@@ -42,9 +41,9 @@ export default function ClientTabs({ posts, comments }) {
           <div className="divide-y">
             {comments.map((comment) => (
               <CommentItem
-                key={comment.id}
+                key={comment.encryptedId}
                 comment={comment}
-                showParentPost={true} // Show which post the comment was on
+                showParentPost={true}
               />
             ))}
           </div>

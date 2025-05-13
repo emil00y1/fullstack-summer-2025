@@ -1,35 +1,39 @@
-// app/api/posts/[postId]/like/route.js
 import { NextResponse } from "next/server";
 import { executeQuery } from "@/lib/db";
 import { auth } from "@/auth";
+import { decryptId } from "@/utils/cryptoUtils";
 
 export async function POST(request, { params }) {
-  const postId = params.postId;
+  const { postId: encryptedPostId } = params;
 
   const session = await auth();
 
   if (!session || !session.user || !session.user.id) {
-    "Session:", session;
+    console.log("Session:", session);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let postId;
+  try {
+    postId = decryptId(encryptedPostId);
+  } catch (error) {
+    return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
   }
 
   const userId = session.user.id;
 
   try {
-    // Check if like already exists
     const existingLikes = await executeQuery(
       "SELECT id FROM likes WHERE post_id = ? AND user_id = ?",
       [postId, userId]
     );
 
     if (existingLikes.length > 0) {
-      // Unlike - remove the like
       await executeQuery(
         "DELETE FROM likes WHERE post_id = ? AND user_id = ?",
         [postId, userId]
       );
 
-      // Get updated like count
       const [{ count }] = await executeQuery(
         "SELECT COUNT(*) as count FROM likes WHERE post_id = ?",
         [postId]
@@ -40,13 +44,11 @@ export async function POST(request, { params }) {
         likeCount: count,
       });
     } else {
-      // Like - add new like
       await executeQuery("INSERT INTO likes (post_id, user_id) VALUES (?, ?)", [
         postId,
         userId,
       ]);
 
-      // Get updated like count
       const [{ count }] = await executeQuery(
         "SELECT COUNT(*) as count FROM likes WHERE post_id = ?",
         [postId]
