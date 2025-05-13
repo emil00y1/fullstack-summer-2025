@@ -48,7 +48,7 @@ async function ProfileInfo({
         <div className="absolute right-4 bottom-4">
           {isOwnAccount ? (
             <Link href="/profile/edit">
-              <Button variant="outline" className="rounded-full cursor-pointer">
+              <Button className="rounded-full cursor-pointer">
                 Edit profile
               </Button>
             </Link>
