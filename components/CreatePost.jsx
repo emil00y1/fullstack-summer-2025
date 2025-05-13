@@ -91,7 +91,7 @@ export function CreatePost() {
                       : "Sign in to post"
                   }
                   disabled={status !== "authenticated"}
-                  className="min-h-24 bg-accent text-base resize-none border-none focus-visible:ring-0 p-0 placeholder:text-gray-500 p-2"
+                  className="min-h-24 bg-accent text-base resize-none border-none focus-visible:ring-0 placeholder:text-gray-500 p-2"
                 />
                 <div className="flex justify-between">
                   <div className="text-sm text-gray-500">
