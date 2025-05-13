@@ -1,12 +1,27 @@
 "use client";
 import { useState } from "react";
-import { Heart, MessageSquare, Repeat } from "lucide-react";
+import {
+  Heart,
+  MessageSquare,
+  Repeat,
+  MoreVertical,
+  Globe,
+  Lock,
+  Loader2,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { formatTimeAgo } from "@/lib/dateUtils";
 import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 export default function PostItem({ post }) {
   const { data: session } = useSession();
@@ -17,8 +32,13 @@ export default function PostItem({ post }) {
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [isReposted, setIsReposted] = useState(false);
   const [repostCount, setRepostCount] = useState(post.repostCount || 0);
+  const [isPublic, setIsPublic] = useState(
+    post.isPublic !== undefined ? post.isPublic : true
+  );
+  const [isLoading, setIsLoading] = useState(false);
 
   const createdAt = post.createdAt ? formatTimeAgo(post.createdAt) : "recently";
+  const isOwnPost = session?.user?.username === post.user?.username;
 
   const handleLike = async (e) => {
     e.preventDefault();
@@ -60,9 +80,72 @@ export default function PostItem({ post }) {
     router.push(`/posts/${post.encryptedId}#comment-input`);
   };
 
+  const togglePrivacy = async (e) => {
+    e.preventDefault();
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`/api/posts/${post.encryptedId}/privacy`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isPublic: !isPublic }),
+      });
+
+      if (response.ok) {
+        setIsPublic(!isPublic);
+      } else {
+        throw new Error("Failed to update privacy");
+      }
+    } catch (error) {
+      console.error("Error updating privacy:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Link href={`/posts/${post.encryptedId}`} className="block">
-      <div className="px-1 py-2 md:p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors">
+      <div className="px-1 py-2 md:p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors relative">
+        {/* Top right dropdown for post owner */}
+        {isOwnPost && (
+          <div className="absolute top-2 right-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 cursor-pointer"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={togglePrivacy}
+                  className="cursor-pointer flex justify-center"
+                >
+                  {isLoading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : isPublic ? (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      <span>Make Private</span>
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="mr-2 h-4 w-4" />
+                      <span>Make Public</span>
+                    </>
+                  )}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+
         <div className="flex gap-3">
           <div
             onClick={(e) => {
@@ -99,6 +182,12 @@ export default function PostItem({ post }) {
                 <span className="text-gray-500 text-xs md:text-sm">
                   {createdAt}
                 </span>
+                {/* Show privacy badge for private posts */}
+                {isOwnPost && !isPublic && (
+                  <Badge variant="outline" className="ml-1 bg-gray-100">
+                    <Lock className="h-3 w-3 mr-1" /> Private
+                  </Badge>
+                )}
               </div>
             </div>
             <div className="mt-2 md:mt-1">

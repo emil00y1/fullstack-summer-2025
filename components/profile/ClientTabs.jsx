@@ -39,13 +39,16 @@ export default function ClientTabs({ posts, comments }) {
           <div className="p-8 text-center text-gray-500">No comments yet</div>
         ) : (
           <div className="divide-y">
-            {comments.map((comment) => (
-              <CommentItem
-                key={comment.encryptedId}
-                comment={comment}
-                showParentPost={true}
-              />
-            ))}
+            {comments.map((comment) => {
+              console.log(comment, "id fejl");
+              return (
+                <CommentItem
+                  key={comment.encryptedId}
+                  comment={comment}
+                  showParentPost={true}
+                />
+              );
+            })}
           </div>
         )}
       </TabsContent>

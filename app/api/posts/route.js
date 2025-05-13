@@ -8,39 +8,64 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get("limit") || 10);
   const offset = parseInt(searchParams.get("offset") || 0);
+  const username = searchParams.get("username");
 
   try {
-    const query = `
+    const session = await auth();
+    const currentUserId = session?.user?.id;
+
+    let query = `
       SELECT 
         p.id, 
-        p.content, 
-        p.created_at, 
-        p.is_public,
+        p.content as body, 
+        p.created_at as createdAt, 
+        p.is_public as isPublic,
         u.id as user_id, 
         u.username,
-        u.email,
         u.avatar,
-        (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as like_count,
-        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
+        (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as likesCount,
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as commentsCount
       FROM posts p
       JOIN users u ON p.user_id = u.id
-      WHERE p.is_public = 1
-      ORDER BY p.created_at DESC 
-      LIMIT ? OFFSET ?
+      WHERE 1=1
     `;
 
-    const posts = await executeQuery(query, [limit, offset]);
+    const queryParams = [];
+
+    // If viewing a specific user's profile
+    if (username) {
+      query += ` AND u.username = ?`;
+      queryParams.push(username);
+
+      // For other users' profiles, only show public posts
+      if (
+        !currentUserId ||
+        (await getUserIdFromUsername(username)) !== currentUserId
+      ) {
+        query += ` AND p.is_public = 1`;
+      }
+    } else {
+      // For general feed, only show public posts
+      query += ` AND p.is_public = 1`;
+    }
+
+    query += ` ORDER BY p.created_at DESC LIMIT ? OFFSET ?`;
+    queryParams.push(limit, offset);
+
+    const posts = await executeQuery(query, queryParams);
+
     const postsWithEncryptedIds = posts.map((post) => ({
       ...post,
       encryptedId: encryptId(post.id),
       user: {
+        id: post.user_id,
         username: post.username,
         avatar: post.avatar,
       },
       id: undefined,
       user_id: undefined,
-      email: undefined,
     }));
+
     return NextResponse.json(postsWithEncryptedIds);
   } catch (error) {
     console.error("Error fetching posts:", error);
@@ -49,6 +74,12 @@ export async function GET(request) {
       { status: 500 }
     );
   }
+}
+
+async function getUserIdFromUsername(username) {
+  const query = `SELECT id FROM users WHERE username = ?`;
+  const results = await executeQuery(query, [username]);
+  return results.length > 0 ? results[0].id : null;
 }
 
 export async function POST(request) {
@@ -73,13 +104,14 @@ export async function POST(request) {
 
     const userId = session.user.id;
     const postId = uuidv4();
+    const isPublic = data.isPublic !== undefined ? data.isPublic : true;
 
     const query = `
       INSERT INTO posts (id, content, user_id, is_public, created_at) 
       VALUES (?, ?, ?, ?, NOW())
     `;
 
-    await executeQuery(query, [postId, data.content, userId, 1]);
+    await executeQuery(query, [postId, data.content, userId, isPublic ? 1 : 0]);
 
     return NextResponse.json({
       success: true,

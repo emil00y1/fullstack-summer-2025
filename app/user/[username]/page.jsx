@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import BackButton from "@/components/BackButton";
 import { executeQuery } from "@/lib/db";
-import FollowButton from "@/components/FollowButton";
-import { auth } from "@/auth"; // Import auth
+import { auth } from "@/auth";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileInfo from "@/components/profile/ProfileInfo";
 import ClientTabs from "@/components/profile/ClientTabs";
+
+// Simple Base64 encoding for encryptedId (replace with proper encryption in production)
+function encryptId(id) {
+  return Buffer.from(id.toString()).toString("base64");
+}
 
 export default async function UserProfilePage({ params }) {
   const { username } = params;
@@ -42,7 +43,7 @@ export default async function UserProfilePage({ params }) {
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
       FROM posts p
       JOIN users u ON p.user_id = u.id
-      WHERE p.user_id = ?
+      WHERE p.user_id = ? AND p.is_public = 1
       ORDER BY p.created_at DESC`,
       [userData.id]
     );
@@ -58,6 +59,7 @@ export default async function UserProfilePage({ params }) {
     );
 
     const formattedPosts = posts.map((post) => ({
+      encryptedId: encryptId(post.id),
       id: post.id,
       body: post.content,
       createdAt: post.created_at,
@@ -76,6 +78,7 @@ export default async function UserProfilePage({ params }) {
     }));
 
     const formattedComments = comments.map((comment) => ({
+      encryptedId: encryptId(comment.id),
       ...comment,
       user: {
         username: comment.username,
@@ -105,13 +108,11 @@ export default async function UserProfilePage({ params }) {
           username={userData.username}
           postsAmount={posts.length}
         />
-        {/* Profile header with avatar */}
         <ProfileInfo
           userData={userData}
           isOwnAccount={currentUserId === userData.id}
           isFollowing={isFollowing}
         />
-
         <ClientTabs posts={formattedPosts} comments={formattedComments} />
       </div>
     );

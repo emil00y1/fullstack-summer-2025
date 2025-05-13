@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import PostItem from "./PostItem";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SessionProvider } from "next-auth/react";
 import { CreatePost } from "./CreatePost";
@@ -89,11 +88,6 @@ export default function Feed() {
       }
     };
   }, [posts, hasMore, isLoading]);
-
-  const handleRefresh = () => {
-    setHasMore(true);
-    fetchPosts(true);
-  };
 
   return (
     <div className="max-w-xl mx-auto p-4">
