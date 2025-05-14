@@ -29,7 +29,6 @@ export async function GET() {
     const formattedUsers = users.map(user => ({
       id: user.id,
       name: user.username,
-      handle: `@${user.email.split('@')[0]}`,
       avatar: user.avatar
     }));
     

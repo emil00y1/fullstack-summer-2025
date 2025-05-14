@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
+import FollowButton from "./FollowButton"; // Import the follow button
 
 const WhoToFollow = () => {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
@@ -41,7 +43,6 @@ const WhoToFollow = () => {
       <h2 className="font-bold text-xl mb-4">Who to follow</h2>
       <div className="space-y-4">
         {loading ? (
-          // Show loading skeletons
           Array(3).fill(0).map((_, i) => (
             <div key={i} className="flex items-center justify-between gap-2 animate-pulse">
               <div className="flex items-center gap-2">
@@ -71,13 +72,13 @@ const WhoToFollow = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-bold text-sm">{user.name}</p>
-                  <p className="text-gray-500 text-sm">{user.handle}</p>
+                  <Link href={`/user/${user.name}`}>
+                    <p className="font-bold text-sm hover:underline">{user.name}</p>
+                  </Link>
+                  <p className="text-gray-500 text-sm">@{user.name}</p>
                 </div>
               </div>
-              <Button className="bg-black dark:bg-white text-white dark:text-black font-bold text-sm rounded-full">
-                Follow
-              </Button>
+              <FollowButton userId={user.id} />
             </div>
           ))
         )}
