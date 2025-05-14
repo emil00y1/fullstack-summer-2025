@@ -18,7 +18,7 @@ export default async function UserProfilePage({ params }) {
   try {
     // Fetch the user data
     const users = await executeQuery(
-      `SELECT id, username, email, avatar, created_at FROM users WHERE username = ?`,
+      `SELECT id, username, email, avatar, bio, cover, created_at FROM users WHERE username = ?`,
       [username]
     );
 

@@ -21,7 +21,6 @@ export default async function ProfilePage() {
       p.content, 
       p.created_at, 
       p.is_public,
-      u.id as user_id,
       u.username,
       u.email,
       u.avatar,
