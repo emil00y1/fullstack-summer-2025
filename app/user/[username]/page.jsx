@@ -26,6 +26,18 @@ export default async function UserProfilePage({ params }) {
 
     const userData = users[0];
 
+    let isAdmin = false;
+    if (currentUserId) {
+      const adminCheck = await executeQuery(
+        `SELECT 1 FROM user_roles ur 
+     JOIN roles r ON ur.role_id = r.id 
+     WHERE ur.user_id = ? AND r.name = 'admin'
+     LIMIT 1`,
+        [currentUserId]
+      );
+      isAdmin = adminCheck.length > 0;
+    }
+
     // Fetch posts with visibility control
     // Only show public posts for other users, show all posts for the profile owner
     const isOwnProfile = currentUserId === userData.id;
@@ -44,7 +56,9 @@ export default async function UserProfilePage({ params }) {
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
       FROM posts p
       JOIN users u ON p.user_id = u.id
-      WHERE p.user_id = ? ${!isOwnProfile ? "AND p.is_public = 1" : ""}
+      WHERE p.user_id = ? ${
+        !isOwnProfile && !isAdmin ? "AND p.is_public = 1" : ""
+      }
       ORDER BY p.created_at DESC`,
       [userData.id]
     );
@@ -66,7 +80,9 @@ export default async function UserProfilePage({ params }) {
        JOIN users u ON c.user_id = u.id
        JOIN posts p ON c.post_id = p.id
        JOIN users pu ON p.user_id = pu.id
-       WHERE c.user_id = ? ${!isOwnProfile ? "AND p.is_public = 1" : ""}
+       WHERE c.user_id = ? ${
+         !isOwnProfile && !isAdmin ? "AND p.is_public = 1" : ""
+       }
        ORDER BY c.created_at DESC`,
       [userData.id]
     );
@@ -234,7 +250,11 @@ export default async function UserProfilePage({ params }) {
           isOwnAccount={isOwnProfile}
           isFollowing={isFollowing}
         />
-        <ClientTabs posts={formattedPosts} comments={formattedComments} />
+        <ClientTabs
+          posts={formattedPosts}
+          comments={formattedComments}
+          isAdmin={isAdmin}
+        />
       </div>
     );
   } catch (error) {

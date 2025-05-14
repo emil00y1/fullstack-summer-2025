@@ -5,7 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PostItem from "@/components/PostItem";
 import CommentItem from "@/components/CommentItem";
 
-export default function ClientTabs({ posts = [], comments = [] }) {
+export default function ClientTabs(
+  { posts = [], comments = [] },
+  isAdmin = false
+) {
   const [activeTab, setActiveTab] = useState("posts");
 
   return (
@@ -24,7 +27,9 @@ export default function ClientTabs({ posts = [], comments = [] }) {
       </TabsList>
       <TabsContent value="posts" className="space-y-2 pb-20">
         {posts.length > 0 ? (
-          posts.map((post) => <PostItem key={post.encryptedId} post={post} />)
+          posts.map((post) => (
+            <PostItem key={post.encryptedId} post={post} isAdmin={isAdmin} />
+          ))
         ) : (
           <div className="text-center py-8 text-gray-500">
             <p>No posts to show</p>
@@ -38,6 +43,7 @@ export default function ClientTabs({ posts = [], comments = [] }) {
               key={comment.encryptedId}
               comment={comment}
               showParentPost={true}
+              isAdmin={isAdmin}
             />
           ))
         ) : (

@@ -24,7 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import LikeButton from "@/components/LikeButton";
 
-export default function PostItem({ post }) {
+export default function PostItem({ post, isAdmin = false }) {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -159,7 +159,7 @@ export default function PostItem({ post }) {
                   {createdAt}
                 </span>
                 {/* Show privacy badge for private posts */}
-                {isOwnPost && !isPublic && (
+                {!isPublic && (!isOwnPost || isAdmin) && (
                   <Badge variant="outline" className="ml-1 bg-gray-100">
                     <Lock className="h-3 w-3 mr-1" /> Private
                   </Badge>
