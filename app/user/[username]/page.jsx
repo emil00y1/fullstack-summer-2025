@@ -5,14 +5,10 @@ import { auth } from "@/auth";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileInfo from "@/components/profile/ProfileInfo";
 import ClientTabs from "@/components/profile/ClientTabs";
-
-// Simple Base64 encoding for encryptedId (replace with proper encryption in production)
-function encryptId(id) {
-  return Buffer.from(id.toString()).toString("base64");
-}
+import { encryptId } from "@/utils/cryptoUtils";
 
 export default async function UserProfilePage({ params }) {
-  const { username } = params;
+  const username = params.username;
   if (!username) return notFound();
 
   // Get current user session
@@ -20,6 +16,7 @@ export default async function UserProfilePage({ params }) {
   const currentUserId = session?.user?.id || null;
 
   try {
+    // Fetch the user data
     const users = await executeQuery(
       `SELECT id, username, email, avatar, created_at FROM users WHERE username = ?`,
       [username]
@@ -28,6 +25,10 @@ export default async function UserProfilePage({ params }) {
     if (!users || users.length === 0) return notFound();
 
     const userData = users[0];
+
+    // Fetch posts with visibility control
+    // Only show public posts for other users, show all posts for the profile owner
+    const isOwnProfile = currentUserId === userData.id;
 
     const posts = await executeQuery(
       `SELECT 
@@ -43,54 +44,90 @@ export default async function UserProfilePage({ params }) {
         (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
       FROM posts p
       JOIN users u ON p.user_id = u.id
-      WHERE p.user_id = ? AND p.is_public = 1
+      WHERE p.user_id = ? ${!isOwnProfile ? "AND p.is_public = 1" : ""}
       ORDER BY p.created_at DESC`,
       [userData.id]
     );
 
+    // Fetch comments related to this user's posts
     const comments = await executeQuery(
-      `SELECT c.*, u.username AS post_author, u.avatar, u.email, u.username
+      `SELECT 
+         c.id, 
+         c.content, 
+         c.created_at, 
+         c.post_id,
+         c.user_id,
+         u.username, 
+         u.email, 
+         u.avatar,
+         p.content as post_content,
+         pu.username as post_author
        FROM comments c
-       JOIN posts p ON c.post_id = p.id
        JOIN users u ON c.user_id = u.id
-       WHERE p.user_id = ?
+       JOIN posts p ON c.post_id = p.id
+       JOIN users pu ON p.user_id = pu.id
+       WHERE p.user_id = ? ${!isOwnProfile ? "AND p.is_public = 1" : ""}
        ORDER BY c.created_at DESC`,
       [userData.id]
     );
 
-    const formattedPosts = posts.map((post) => ({
-      encryptedId: encryptId(post.id),
-      id: post.id,
-      body: post.content,
-      createdAt: post.created_at,
-      userId: post.user_id,
-      likesCount: post.like_count,
-      commentsCount: post.comment_count,
-      isPublic: post.is_public === 1,
-      user: {
-        id: post.user_id,
-        username: post.username,
-        email: post.email,
-        avatar: post.avatar,
-      },
-      comments: [],
-      likes: [],
-    }));
+    // Get current user's likes for these posts (if authenticated)
+    let userLikes = [];
+    if (currentUserId) {
+      userLikes = await executeQuery(
+        `SELECT post_id FROM likes WHERE user_id = ?`,
+        [currentUserId]
+      );
+    }
+    const likedPostIds = new Set(userLikes.map((like) => like.post_id));
 
-    const formattedComments = comments.map((comment) => ({
-      encryptedId: encryptId(comment.id),
-      ...comment,
-      user: {
-        username: comment.username,
-        email: comment.email,
-        avatar: comment.avatar,
-      },
-      post: {
+    // Format posts for the client component
+    const formattedPosts = posts.map((post) => {
+      return {
+        id: post.id, // Keep the original ID (server-side only)
+        encryptedId: encryptId(post.id), // Single encrypted ID property
+        body: post.content,
+        createdAt: post.created_at,
+        userId: post.user_id,
+        likesCount: post.like_count,
+        commentsCount: post.comment_count,
+        isPublic: post.is_public === 1,
+        isLiked: likedPostIds.has(post.id),
         user: {
-          username: comment.post_author,
+          id: post.user_id,
+          username: post.username,
+          email: post.email,
+          avatar: post.avatar,
         },
-      },
-    }));
+        comments: [], // Will populate later
+      };
+    });
+
+    // Format comments with encrypted IDs
+    const formattedComments = comments.map((comment) => {
+      return {
+        id: comment.id, // Keep the original ID (server-side only)
+        encryptedId: encryptId(comment.id), // Single encrypted ID property
+        postId: comment.post_id, // Keep the original post ID (server-side only)
+        postEncryptedId: encryptId(comment.post_id), // Single encrypted post ID property
+        body: comment.content,
+        createdAt: comment.created_at,
+        user: {
+          id: comment.user_id,
+          username: comment.username,
+          email: comment.email,
+          avatar: comment.avatar,
+        },
+        post: {
+          id: comment.post_id, // Keep the original ID (server-side only)
+          encryptedId: encryptId(comment.post_id), // Single encrypted ID property
+          body: comment.post_content,
+          user: {
+            username: comment.post_author,
+          },
+        },
+      };
+    });
 
     // Check if current user is following this profile (only if user is authenticated)
     let isFollowing = false;
@@ -102,6 +139,42 @@ export default async function UserProfilePage({ params }) {
       isFollowing = isFollowingResult.length > 0;
     }
 
+    // For each post, fetch the top 3 most recent comments
+    for (const post of formattedPosts) {
+      const postComments = await executeQuery(
+        `SELECT 
+           c.id, 
+           c.content, 
+           c.created_at, 
+           c.user_id,
+           u.username, 
+           u.email, 
+           u.avatar
+         FROM comments c
+         JOIN users u ON c.user_id = u.id
+         WHERE c.post_id = ?
+         ORDER BY c.created_at DESC
+         LIMIT 3`,
+        [post.id] // Use the original ID for database queries
+      );
+
+      // Format and add the comments to the post
+      post.comments = postComments.map((comment) => ({
+        id: comment.id, // Keep the original ID (server-side only)
+        encryptedId: encryptId(comment.id), // Single encrypted ID property
+        postId: post.id, // Keep the original post ID (server-side only)
+        postEncryptedId: post.encryptedId, // Use the post's encrypted ID
+        body: comment.content,
+        createdAt: comment.created_at,
+        user: {
+          id: comment.user_id,
+          username: comment.username,
+          email: comment.email,
+          avatar: comment.avatar,
+        },
+      }));
+    }
+
     return (
       <div>
         <ProfileHeader
@@ -110,7 +183,7 @@ export default async function UserProfilePage({ params }) {
         />
         <ProfileInfo
           userData={userData}
-          isOwnAccount={currentUserId === userData.id}
+          isOwnAccount={isOwnProfile}
           isFollowing={isFollowing}
         />
         <ClientTabs posts={formattedPosts} comments={formattedComments} />

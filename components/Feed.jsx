@@ -32,29 +32,15 @@ export default function Feed() {
       const data = await response.json();
       const fetchedPosts = Array.isArray(data) ? data : [];
 
-      const formattedPosts = fetchedPosts.map((post) => ({
-        encryptedId: post.encryptedId,
-        body: post.content,
-        createdAt: post.created_at,
-        likesCount: post.like_count,
-        commentsCount: post.comment_count,
-        user: {
-          username: post.user.username,
-          name: post.user.username,
-          avatar: post.user.avatar,
-        },
-        likes: [],
-      }));
-
       if (fetchedPosts.length < limit) {
         setHasMore(false);
       }
 
       if (reset) {
-        setPosts(formattedPosts);
+        setPosts(fetchedPosts);
         setOffset(limit);
       } else {
-        setPosts((prevPosts) => [...prevPosts, ...formattedPosts]);
+        setPosts((prevPosts) => [...prevPosts, ...fetchedPosts]);
         setOffset(offset + limit);
       }
     } catch (error) {
@@ -103,9 +89,9 @@ export default function Feed() {
       ) : (
         <div className="space-y-4">
           <SessionProvider>
-            {posts.map((post) => (
-              <PostItem key={post.encryptedId} post={post} />
-            ))}
+            {posts.map((post) => {
+              return <PostItem key={post.encryptedId} post={post} />;
+            })}
           </SessionProvider>
 
           {posts.length > 0 && hasMore && (

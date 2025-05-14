@@ -1,8 +1,10 @@
+// app/api/posts/route.js
 import { NextResponse } from "next/server";
 import { executeQuery } from "@/lib/db";
 import { auth } from "@/auth";
 import { encryptId } from "@/utils/cryptoUtils";
 import { v4 as uuidv4 } from "uuid";
+import { fetchPostsWithLikes } from "@/lib/postUtils";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -14,59 +16,20 @@ export async function GET(request) {
     const session = await auth();
     const currentUserId = session?.user?.id;
 
-    let query = `
-      SELECT 
-        p.id, 
-        p.content as body, 
-        p.created_at as createdAt, 
-        p.is_public as isPublic,
-        u.id as user_id, 
-        u.username,
-        u.avatar,
-        (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as likesCount,
-        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as commentsCount
-      FROM posts p
-      JOIN users u ON p.user_id = u.id
-      WHERE 1=1
-    `;
-
-    const queryParams = [];
-
-    // If viewing a specific user's profile
-    if (username) {
-      query += ` AND u.username = ?`;
-      queryParams.push(username);
-
-      // For other users' profiles, only show public posts
-      if (
-        !currentUserId ||
-        (await getUserIdFromUsername(username)) !== currentUserId
-      ) {
-        query += ` AND p.is_public = 1`;
-      }
-    } else {
-      // For general feed, only show public posts
-      query += ` AND p.is_public = 1`;
-    }
-
-    query += ` ORDER BY p.created_at DESC LIMIT ? OFFSET ?`;
-    queryParams.push(limit, offset);
-
-    const posts = await executeQuery(query, queryParams);
-
-    const postsWithEncryptedIds = posts.map((post) => ({
-      ...post,
-      encryptedId: encryptId(post.id),
-      user: {
-        id: post.user_id,
-        username: post.username,
-        avatar: post.avatar,
+    // Use the reusable function to fetch posts with likes
+    const posts = await fetchPostsWithLikes(
+      {
+        limit,
+        offset,
+        username,
+        publicOnly:
+          !username ||
+          (await getUserIdFromUsername(username)) !== currentUserId,
       },
-      id: undefined,
-      user_id: undefined,
-    }));
+      currentUserId
+    );
 
-    return NextResponse.json(postsWithEncryptedIds);
+    return NextResponse.json(posts);
   } catch (error) {
     console.error("Error fetching posts:", error);
     return NextResponse.json(

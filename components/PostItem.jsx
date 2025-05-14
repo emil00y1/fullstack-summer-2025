@@ -1,7 +1,7 @@
+// components/PostItem.jsx
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Heart,
   MessageSquare,
   Repeat,
   MoreVertical,
@@ -22,14 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import LikeButton from "@/components/LikeButton";
 
 export default function PostItem({ post }) {
   const { data: session } = useSession();
   const router = useRouter();
-  const [isLiked, setIsLiked] = useState(
-    post.likes?.includes(session?.user?.id) || false
-  );
-  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+
+  // Initialize state
   const [isReposted, setIsReposted] = useState(false);
   const [repostCount, setRepostCount] = useState(post.repostCount || 0);
   const [isPublic, setIsPublic] = useState(
@@ -37,32 +36,9 @@ export default function PostItem({ post }) {
   );
   const [isLoading, setIsLoading] = useState(false);
 
+  // Update isLiked state is now handled by the LikeButton component
   const createdAt = post.createdAt ? formatTimeAgo(post.createdAt) : "recently";
   const isOwnPost = session?.user?.username === post.user?.username;
-
-  const handleLike = async (e) => {
-    e.preventDefault();
-    if (!session) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const endpoint = `/api/posts/${post.encryptedId}/like`;
-      const method = isLiked ? "DELETE" : "POST";
-
-      const response = await fetch(endpoint, { method });
-
-      if (response.ok) {
-        setIsLiked(!isLiked);
-        setLikesCount((prevCount) => (isLiked ? prevCount - 1 : prevCount + 1));
-      } else {
-        throw new Error("Failed to toggle like");
-      }
-    } catch (error) {
-      console.error("Error toggling like:", error);
-    }
-  };
 
   const handleRepost = async (e) => {
     e.preventDefault();
@@ -226,22 +202,12 @@ export default function PostItem({ post }) {
                   <Repeat className="h-4 w-4 mr-1" />
                   <span>{repostCount}</span>
                 </Button>
-                <Button
-                  onClick={handleLike}
-                  variant="ghost"
-                  className={`${
-                    isLiked
-                      ? "text-red-500"
-                      : "text-gray-500 hover:text-red-500"
-                  }`}
-                  size="sm"
-                >
-                  <Heart
-                    className="h-4 w-4 mr-1"
-                    fill={isLiked ? "currentColor" : "none"}
-                  />
-                  <span>{likesCount}</span>
-                </Button>
+                <LikeButton
+                  initialIsLiked={post.isLiked}
+                  initialLikesCount={post.likesCount}
+                  postEncryptedId={post.encryptedId}
+                  onLikeError={(error) => console.error("Like error:", error)}
+                />
               </div>
             </div>
           </div>

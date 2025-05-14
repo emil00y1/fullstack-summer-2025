@@ -1,54 +1,48 @@
+// components/profile/ClientTabs.jsx
 "use client";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PostItem from "@/components/PostItem";
 import CommentItem from "@/components/CommentItem";
 
-export default function ClientTabs({ posts, comments }) {
+export default function ClientTabs({ posts = [], comments = [] }) {
   const [activeTab, setActiveTab] = useState("posts");
 
   return (
     <Tabs
       defaultValue="posts"
-      className="mt-6 px-4"
+      className="w-full px-2 mt-4"
       onValueChange={setActiveTab}
     >
-      <TabsList className="w-full border-b bg-accent">
-        <TabsTrigger value="posts" className="flex-1 cursor-pointer">
-          Posts
+      <TabsList className="grid w-full grid-cols-2 mb-2">
+        <TabsTrigger value="posts" className="cursor-pointer">
+          Posts ({posts.length})
         </TabsTrigger>
-        <TabsTrigger value="comments" className="flex-1 cursor-pointer">
-          Comments
+        <TabsTrigger value="comments" className="cursor-pointer">
+          Comments ({comments.length})
         </TabsTrigger>
       </TabsList>
-
-      <TabsContent value="posts" className="p-0">
-        {posts.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No posts yet</div>
+      <TabsContent value="posts" className="space-y-2 pb-20">
+        {posts.length > 0 ? (
+          posts.map((post) => <PostItem key={post.encryptedId} post={post} />)
         ) : (
-          <div className="divide-y">
-            {posts.map((post) => (
-              <PostItem key={post.encryptedId} post={post} />
-            ))}
+          <div className="text-center py-8 text-gray-500">
+            <p>No posts to show</p>
           </div>
         )}
       </TabsContent>
-
-      <TabsContent value="comments" className="p-0">
-        {comments.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No comments yet</div>
+      <TabsContent value="comments" className="space-y-2 pb-20">
+        {comments.length > 0 ? (
+          comments.map((comment) => (
+            <CommentItem
+              key={comment.encryptedId}
+              comment={comment}
+              showParentPost={true}
+            />
+          ))
         ) : (
-          <div className="divide-y">
-            {comments.map((comment) => {
-              console.log(comment, "id fejl");
-              return (
-                <CommentItem
-                  key={comment.encryptedId}
-                  comment={comment}
-                  showParentPost={true}
-                />
-              );
-            })}
+          <div className="text-center py-8 text-gray-500">
+            <p>No comments to show</p>
           </div>
         )}
       </TabsContent>

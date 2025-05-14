@@ -85,7 +85,6 @@ export default async function ProfilePage() {
       name: comment.username,
     },
     post: {
-      encryptedId: encryptId(comment.post_id),
       body: comment.post_content,
       user: {
         username: comment.post_username,

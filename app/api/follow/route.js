@@ -1,6 +1,7 @@
 // app/api/follow/route.js
 import { executeQuery } from "@/lib/db";
 import { auth } from "@/auth";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request) {
   try {
@@ -32,7 +33,7 @@ export async function POST(request) {
     }
 
     // Prevent users from following themselves
-    if (followerId === Number(userToFollowId)) {
+    if (followerId === userToFollowId) {
       return new Response(
         JSON.stringify({ error: "You cannot follow yourself" }),
         {
@@ -76,8 +77,8 @@ export async function POST(request) {
     // Otherwise, create new follow
     else {
       await executeQuery(
-        "INSERT INTO follows (follower_id, following_id) VALUES (?, ?)",
-        [followerId, userToFollowId]
+        "INSERT INTO follows (id, follower_id, following_id) VALUES (?, ?, ?)",
+        [uuidv4(), followerId, userToFollowId]
       );
 
       // Update followers count (Optional, for real-time feedback)

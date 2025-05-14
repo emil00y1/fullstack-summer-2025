@@ -46,6 +46,7 @@ async function seed() {
     console.log("Dropping existing tables if they exist...");
     await connection.execute("DROP TABLE IF EXISTS follows");
     await connection.execute("DROP TABLE IF EXISTS comments");
+    await connection.execute("DROP TABLE IF EXISTS comment_likes");
     await connection.execute("DROP TABLE IF EXISTS likes");
     await connection.execute("DROP TABLE IF EXISTS posts");
     await connection.execute("DROP TABLE IF EXISTS users");
@@ -102,6 +103,19 @@ async function seed() {
       )
     `);
 
+    console.log("Creating comment_likes table...");
+    await connection.execute(`
+  CREATE TABLE comment_likes (
+    id CHAR(36) NOT NULL PRIMARY KEY,
+    comment_id CHAR(36) NOT NULL,
+    user_id CHAR(36) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (comment_id) REFERENCES comments(id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE (comment_id, user_id)
+  )
+`);
+
     console.log("Creating follows table...");
     await connection.execute(`
       CREATE TABLE follows (
@@ -133,6 +147,9 @@ async function seed() {
     );
     await connection.execute(
       "CREATE INDEX idx_follows_follower ON follows(follower_id)"
+    );
+    await connection.execute(
+      "CREATE INDEX idx_comment_likes_comment_id ON comment_likes(comment_id)"
     );
 
     console.log("Inserting sample users...");

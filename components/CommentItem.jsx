@@ -1,47 +1,19 @@
+// components/CommentItem.jsx
 "use client";
 import { useState } from "react";
-import { Heart } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import { formatTimeAgo } from "@/lib/dateUtils";
 import { useRouter } from "next/navigation";
+import LikeButton from "@/components/LikeButton";
 
 export default function CommentItem({ comment, showParentPost = false }) {
   const { data: session } = useSession();
   const router = useRouter();
-  const [isLiked, setIsLiked] = useState(
-    comment.likes?.includes(session?.user?.id) || false
-  );
-  const [likesCount, setLikesCount] = useState(comment.likesCount || 0);
 
   const createdAt = comment.createdAt
     ? formatTimeAgo(comment.createdAt)
     : "recently";
-
-  const handleLike = async (e) => {
-    e.preventDefault();
-    if (!session) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const endpoint = `/api/posts/${comment.postId}/comments/${comment.encryptedId}/like`;
-      const method = isLiked ? "DELETE" : "POST";
-
-      const response = await fetch(endpoint, { method });
-
-      if (response.ok) {
-        setIsLiked(!isLiked);
-        setLikesCount((prevCount) => (isLiked ? prevCount - 1 : prevCount + 1));
-      } else {
-        throw new Error("Failed to toggle like");
-      }
-    } catch (error) {
-      console.error("Error toggling like:", error);
-    }
-  };
 
   return (
     <div className="px-1 py-2 md:p-4 hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors">
@@ -87,20 +59,15 @@ export default function CommentItem({ comment, showParentPost = false }) {
             <p className="whitespace-pre-line">{comment.body}</p>
           </div>
           <div className="flex justify-start mt-2">
-            <Button
-              onClick={handleLike}
-              variant="ghost"
-              className={`${
-                isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
-              }`}
-              size="sm"
-            >
-              <Heart
-                className="h-4 w-4 mr-1"
-                fill={isLiked ? "currentColor" : "none"}
-              />
-              <span>{likesCount}</span>
-            </Button>
+            <LikeButton
+              initialIsLiked={comment.isLiked}
+              initialLikesCount={comment.likesCount}
+              postEncryptedId={comment.postEncryptedId}
+              commentEncryptedId={comment.encryptedId}
+              onLikeError={(error) =>
+                console.error("Comment like error:", error)
+              }
+            />
           </div>
         </div>
       </div>

@@ -6,9 +6,6 @@ if (!ENCRYPTION_KEY || Buffer.from(ENCRYPTION_KEY, "hex").length !== 32) {
   throw new Error("URL_ENCRYPTION_KEY must be a 32-byte hex string");
 }
 
-// Generate a key for development (DO NOT USE IN PRODUCTION)
-// console.log(crypto.randomBytes(32).toString("hex"));
-
 function encryptId(id) {
   const iv = crypto.randomBytes(12); // 12 bytes for GCM
   const cipher = crypto.createCipheriv(
