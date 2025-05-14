@@ -43,6 +43,6 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("Verification error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 500 });
   }
 }

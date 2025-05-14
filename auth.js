@@ -5,15 +5,13 @@ import { z } from "zod";
 // Define validation schema
 const signInSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
-  password: z
-    .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(
-      /[!*&?,.-_]/,
-      "Password must contain at least one special character (!*&?,.-_)"
-    ),
+  password: z.string().min(1, "Password is required"),
+  // .min(6, "Password must be at least 6 characters")
+  // .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  // .regex(
+  //   /[!*&?,.-_]/,
+  //   "Password must contain at least one special character (!*&?,.-_)"
+  // ),
 });
 
 // Determine the base URL based on environment with fallback
@@ -116,6 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   pages: {
     signIn: "/login",
+    error: "/login",
   },
   session: {
     strategy: "jwt",
