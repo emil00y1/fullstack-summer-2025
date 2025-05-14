@@ -49,7 +49,7 @@ export default async function SidebarProfileFooter() {
                     {userData?.username}
                   </span>
                   <span className="text-gray-500 text-xs">
-                    @{userData?.email?.split("@")[0]}
+                    @{userData.username}
                   </span>
                 </div>
               </div>
