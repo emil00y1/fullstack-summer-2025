@@ -44,11 +44,13 @@ async function seed() {
 
   try {
     console.log("Dropping existing tables if they exist...");
-    await connection.execute("DROP TABLE IF EXISTS follows");
-    await connection.execute("DROP TABLE IF EXISTS comments");
     await connection.execute("DROP TABLE IF EXISTS comment_likes");
     await connection.execute("DROP TABLE IF EXISTS likes");
+    await connection.execute("DROP TABLE IF EXISTS follows");
+    await connection.execute("DROP TABLE IF EXISTS comments");
     await connection.execute("DROP TABLE IF EXISTS posts");
+    await connection.execute("DROP TABLE IF EXISTS user_roles");
+    await connection.execute("DROP TABLE IF EXISTS roles");
     await connection.execute("DROP TABLE IF EXISTS users");
 
     console.log("Creating users table...");
@@ -129,6 +131,28 @@ async function seed() {
       )
     `);
 
+    console.log("Creating roles table...");
+    await connection.execute(`
+      CREATE TABLE roles (
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        name VARCHAR(25) NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log("Creating user_roles table...");
+    await connection.execute(`
+      CREATE TABLE user_roles (
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        user_id CHAR(36) NOT NULL,
+        role_id CHAR(36) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (role_id) REFERENCES roles(id),
+        UNIQUE (user_id, role_id)
+      )
+    `);
+
     console.log("Creating indexes for improved performance...");
     await connection.execute(
       "CREATE INDEX idx_posts_created_at ON posts(created_at)"
@@ -151,6 +175,27 @@ async function seed() {
     await connection.execute(
       "CREATE INDEX idx_comment_likes_comment_id ON comment_likes(comment_id)"
     );
+    console.log("Creating indexes for roles tables...");
+    await connection.execute(
+      "CREATE INDEX idx_user_roles_user_id ON user_roles(user_id)"
+    );
+    await connection.execute(
+      "CREATE INDEX idx_user_roles_role_id ON user_roles(role_id)"
+    );
+
+    console.log("Inserting default roles...");
+    const userRoleId = uuidv4();
+    const adminRoleId = uuidv4();
+
+    await connection.execute("INSERT INTO roles (id, name) VALUES (?, ?)", [
+      userRoleId,
+      "user",
+    ]);
+
+    await connection.execute("INSERT INTO roles (id, name) VALUES (?, ?)", [
+      adminRoleId,
+      "admin",
+    ]);
 
     console.log("Inserting sample users...");
     const hashedPassword = await bcrypt.hash("password", 10);
@@ -254,6 +299,41 @@ async function seed() {
         ]
       );
     }
+
+    console.log("Creating admin user...");
+    const adminId = uuidv4();
+    const adminHashedPassword = await bcrypt.hash("Admin321!", 10);
+
+    await connection.execute(
+      `
+      INSERT INTO users (id, username, email, password, avatar, bio, cover)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+      [
+        adminId,
+        "admin",
+        "admin@y.com",
+        adminHashedPassword,
+        "https://api.dicebear.com/6.x/avataaars/svg?seed=admin",
+        "System administrator",
+        "https://picsum.photos/seed/admin/1200/400",
+      ]
+    );
+
+    console.log("Assigning roles to users...");
+    // Assign user role to all users (including admin)
+    for (const user of [...users, { id: adminId }]) {
+      await connection.execute(
+        "INSERT INTO user_roles (id, user_id, role_id) VALUES (?, ?, ?)",
+        [uuidv4(), user.id, userRoleId]
+      );
+    }
+
+    // Assign admin role to admin user only
+    await connection.execute(
+      "INSERT INTO user_roles (id, user_id, role_id) VALUES (?, ?, ?)",
+      [uuidv4(), adminId, adminRoleId]
+    );
 
     console.log("Inserting sample posts...");
     const sampleContents = [
