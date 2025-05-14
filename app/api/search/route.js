@@ -21,7 +21,7 @@ export async function GET(request) {
       FROM users 
       WHERE username LIKE ?
       LIMIT 5`,
-      [searchTerm, searchTerm]
+      [searchTerm]
     );
 
     // Search for public posts

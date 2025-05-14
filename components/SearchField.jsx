@@ -98,30 +98,28 @@ const SearchField = () => {
             <div className="px-3 py-1 text-xs font-semibold text-gray-500 bg-gray-50 dark:bg-gray-800">
               People
             </div>
-            {users.map((user) => (
-              <Link
-                href={`/user/${user.username}`}
-                key={user.username}
-                className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800"
-                onClick={() => setShowResults(false)}
-              >
-                <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage
-                    src={
-                      user.avatar ||
-                      `https://api.dicebear.com/6.x/avataaars/svg?seed=${user.username}`
-                    }
-                    alt={user.username}
-                  />
-                  <AvatarFallback>
-                    {user.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium">@{user.username}</div>
-                </div>
-              </Link>
-            ))}
+            {users.map((user) => {
+              console.log(user, "user");
+
+              return (
+                <Link
+                  href={`/user/${user.username}`}
+                  key={user.username}
+                  className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  onClick={() => setShowResults(false)}
+                >
+                  <Avatar className="h-8 w-8 mr-2">
+                    <AvatarImage src={user.avatar} alt={user.username} />
+                    <AvatarFallback>
+                      {user.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium">@{user.username}</div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
 
