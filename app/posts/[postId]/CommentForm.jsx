@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "next-auth/react";
+import { Loader2 } from "lucide-react";
 
-export default function CommentForm({ postId }) {
+export default function CommentForm({ encryptedPostId }) {
   const { data: session } = useSession();
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,7 +34,7 @@ export default function CommentForm({ postId }) {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/posts/${postId}/comments`, {
+      const response = await fetch(`/api/posts/${encryptedPostId}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +88,7 @@ export default function CommentForm({ postId }) {
             size="sm"
             className="rounded-full px-4 bg-blue-500 hover:bg-blue-600 cursor-pointer"
           >
-            Reply
+            {(isSubmitting && <Loader2 className="animate-spin" />) || "Reply"}
           </Button>
         </div>
       </div>
