@@ -1,14 +1,14 @@
 // components/CommentItem.jsx
 "use client";
-import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "next-auth/react";
 import { formatTimeAgo } from "@/lib/dateUtils";
 import { useRouter } from "next/navigation";
 import LikeButton from "@/components/LikeButton";
+import { ReplyIcon } from "lucide-react";
+import Link from "next/link";
 
 export default function CommentItem({ comment, showParentPost = false }) {
-  const { data: session } = useSession();
   const router = useRouter();
 
   const createdAt = comment.createdAt
@@ -17,6 +17,18 @@ export default function CommentItem({ comment, showParentPost = false }) {
 
   return (
     <div className="px-1 py-2 md:p-4 hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors">
+      {showParentPost && comment.post && (
+        <Link
+          className="mb-1 flex items-center gap-1 text-xs text-gray-500 hover:text-blue-500 cursor-pointer"
+          href={`/posts/${comment.post.encryptedId}`}
+        >
+          <ReplyIcon size={12} className="rotate-180" />
+          <span>replied to</span>
+          <span className="font-medium text-blue-500 hover:underline">
+            {comment.post.user.username}&apos;s post
+          </span>
+        </Link>
+      )}
       <div className="flex gap-3">
         <div
           onClick={(e) => {

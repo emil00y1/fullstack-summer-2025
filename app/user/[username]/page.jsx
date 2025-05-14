@@ -8,7 +8,7 @@ import ClientTabs from "@/components/profile/ClientTabs";
 import { encryptId } from "@/utils/cryptoUtils";
 
 export default async function UserProfilePage({ params }) {
-  const username = params.username;
+  const username = params?.username || "";
   if (!username) return notFound();
 
   // Get current user session
@@ -49,7 +49,6 @@ export default async function UserProfilePage({ params }) {
       [userData.id]
     );
 
-    // Fetch comments related to this user's posts
     const comments = await executeQuery(
       `SELECT 
          c.id, 
@@ -61,12 +60,13 @@ export default async function UserProfilePage({ params }) {
          u.email, 
          u.avatar,
          p.content as post_content,
-         pu.username as post_author
+         pu.username as post_author,
+         (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as like_count
        FROM comments c
        JOIN users u ON c.user_id = u.id
        JOIN posts p ON c.post_id = p.id
        JOIN users pu ON p.user_id = pu.id
-       WHERE p.user_id = ? ${!isOwnProfile ? "AND p.is_public = 1" : ""}
+       WHERE c.user_id = ? ${!isOwnProfile ? "AND p.is_public = 1" : ""}
        ORDER BY c.created_at DESC`,
       [userData.id]
     );
@@ -81,11 +81,39 @@ export default async function UserProfilePage({ params }) {
     }
     const likedPostIds = new Set(userLikes.map((like) => like.post_id));
 
+    let userCommentLikes = [];
+    if (currentUserId) {
+      userCommentLikes = await executeQuery(
+        `SELECT comment_id FROM comment_likes WHERE user_id = ?`,
+        [currentUserId]
+      );
+    }
+    const likedCommentIds = new Set(
+      userCommentLikes.map((like) => like.comment_id)
+    );
+
+    // Create a mapping of all IDs to their encrypted values
+    const encryptedIds = {};
+
+    // Encrypt post IDs
+    posts.forEach((post) => {
+      encryptedIds[`post_${post.id}`] = encryptId(post.id);
+    });
+
+    // Encrypt comment IDs and ensure all post IDs referenced by comments are encrypted
+    comments.forEach((comment) => {
+      encryptedIds[`comment_${comment.id}`] = encryptId(comment.id);
+      // Make sure we encrypt post IDs referenced in comments if they aren't already encrypted
+      if (!encryptedIds[`post_${comment.post_id}`]) {
+        encryptedIds[`post_${comment.post_id}`] = encryptId(comment.post_id);
+      }
+    });
+
     // Format posts for the client component
     const formattedPosts = posts.map((post) => {
       return {
         id: post.id, // Keep the original ID (server-side only)
-        encryptedId: encryptId(post.id), // Single encrypted ID property
+        encryptedId: encryptedIds[`post_${post.id}`], // Use pre-encrypted ID
         body: post.content,
         createdAt: post.created_at,
         userId: post.user_id,
@@ -107,11 +135,13 @@ export default async function UserProfilePage({ params }) {
     const formattedComments = comments.map((comment) => {
       return {
         id: comment.id, // Keep the original ID (server-side only)
-        encryptedId: encryptId(comment.id), // Single encrypted ID property
+        encryptedId: encryptedIds[`comment_${comment.id}`], // Use pre-encrypted ID
         postId: comment.post_id, // Keep the original post ID (server-side only)
-        postEncryptedId: encryptId(comment.post_id), // Single encrypted post ID property
+        postEncryptedId: encryptedIds[`post_${comment.post_id}`], // Use pre-encrypted post ID
         body: comment.content,
         createdAt: comment.created_at,
+        isLiked: likedCommentIds.has(comment.id),
+        likesCount: comment.like_count || 0,
         user: {
           id: comment.user_id,
           username: comment.username,
@@ -120,7 +150,7 @@ export default async function UserProfilePage({ params }) {
         },
         post: {
           id: comment.post_id, // Keep the original ID (server-side only)
-          encryptedId: encryptId(comment.post_id), // Single encrypted ID property
+          encryptedId: encryptedIds[`post_${comment.post_id}`], // Use pre-encrypted post ID
           body: comment.post_content,
           user: {
             username: comment.post_author,
@@ -149,7 +179,8 @@ export default async function UserProfilePage({ params }) {
            c.user_id,
            u.username, 
            u.email, 
-           u.avatar
+           u.avatar,
+           (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as like_count
          FROM comments c
          JOIN users u ON c.user_id = u.id
          WHERE c.post_id = ?
@@ -158,14 +189,31 @@ export default async function UserProfilePage({ params }) {
         [post.id] // Use the original ID for database queries
       );
 
+      // Get likes for these comments if current user is authenticated
+      const commentLikedMap = new Map();
+      if (currentUserId && postComments.length > 0) {
+        const commentIds = postComments.map((comment) => comment.id);
+        const commentLikes = await executeQuery(
+          `SELECT comment_id FROM comment_likes WHERE user_id = ? AND comment_id IN (?)`,
+          [currentUserId, commentIds]
+        );
+
+        commentLikes.forEach((like) => {
+          commentLikedMap.set(like.comment_id, true);
+        });
+      }
+
       // Format and add the comments to the post
       post.comments = postComments.map((comment) => ({
         id: comment.id, // Keep the original ID (server-side only)
-        encryptedId: encryptId(comment.id), // Single encrypted ID property
+        encryptedId:
+          encryptedIds[`comment_${comment.id}`] || encryptId(comment.id), // Use pre-encrypted ID if available
         postId: post.id, // Keep the original post ID (server-side only)
         postEncryptedId: post.encryptedId, // Use the post's encrypted ID
         body: comment.content,
         createdAt: comment.created_at,
+        isLiked: commentLikedMap.has(comment.id),
+        likesCount: comment.like_count || 0,
         user: {
           id: comment.user_id,
           username: comment.username,
