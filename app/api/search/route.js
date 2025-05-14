@@ -7,10 +7,7 @@ export async function GET(request) {
     const query = searchParams.get("q");
 
     if (!query || query.trim().length < 2) {
-      return NextResponse.json(
-        { users: [], posts: [] },
-        { status: 200 }
-      );
+      return NextResponse.json({ users: [], posts: [] }, { status: 200 });
     }
 
     // Format the search term for SQL LIKE statement
@@ -18,10 +15,8 @@ export async function GET(request) {
 
     // Search for users
     const users = await executeQuery(
-      `SELECT 
-        id, 
+      `SELECT
         username, 
-        email, 
         avatar 
       FROM users 
       WHERE username LIKE ?

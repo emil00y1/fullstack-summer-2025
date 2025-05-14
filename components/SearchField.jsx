@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, User, MessageSquare } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import React, { useState, useEffect, useRef } from "react";
+import { Search, User, MessageSquare } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const SearchField = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState({ users: [], posts: [] });
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
@@ -22,9 +22,9 @@ const SearchField = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -43,18 +43,20 @@ const SearchField = () => {
 
   const performSearch = async (query) => {
     if (!query.trim()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('Search failed');
-      
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(query)}`
+      );
+      if (!response.ok) throw new Error("Search failed");
+
       const data = await response.json();
       setSearchResults(data);
       setShowResults(true);
     } catch (error) {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +64,7 @@ const SearchField = () => {
 
   const handleKeyDown = (e) => {
     // Handle Enter key to go to search results page
-    if (e.key === 'Enter' && searchQuery.trim()) {
+    if (e.key === "Enter" && searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setShowResults(false);
     }
@@ -79,18 +81,12 @@ const SearchField = () => {
     const hasResults = users.length > 0 || posts.length > 0;
 
     if (isLoading) {
-      return (
-        <div className="p-2 text-center text-gray-500">
-          Searching...
-        </div>
-      );
+      return <div className="p-2 text-center text-gray-500">Searching...</div>;
     }
 
     if (!hasResults) {
       return (
-        <div className="p-3 text-center text-gray-500">
-          No results found
-        </div>
+        <div className="p-3 text-center text-gray-500">No results found</div>
       );
     }
 
@@ -102,19 +98,24 @@ const SearchField = () => {
             <div className="px-3 py-1 text-xs font-semibold text-gray-500 bg-gray-50 dark:bg-gray-800">
               People
             </div>
-            {users.map(user => (
+            {users.map((user) => (
               <Link
                 href={`/user/${user.username}`}
-                key={user.id}
+                key={user.username}
                 className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800"
                 onClick={() => setShowResults(false)}
               >
                 <Avatar className="h-8 w-8 mr-2">
                   <AvatarImage
-                    src={user.avatar || `https://api.dicebear.com/6.x/avataaars/svg?seed=${user.username}`}
+                    src={
+                      user.avatar ||
+                      `https://api.dicebear.com/6.x/avataaars/svg?seed=${user.username}`
+                    }
                     alt={user.username}
                   />
-                  <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>
+                    {user.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="font-medium">@{user.username}</div>
@@ -130,7 +131,7 @@ const SearchField = () => {
             <div className="px-3 py-1 text-xs font-semibold text-gray-500 bg-gray-50 dark:bg-gray-800">
               Posts
             </div>
-            {posts.map(post => (
+            {posts.map((post) => (
               <Link
                 href={`/posts/${post.id}`}
                 key={post.id}
