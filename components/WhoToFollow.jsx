@@ -32,7 +32,6 @@ const WhoToFollow = () => {
     } finally {
       setLoading(false);
       setShowMoreLoading(false);
-      console.log(data);
     }
   };
 
