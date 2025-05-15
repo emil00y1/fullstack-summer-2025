@@ -1,42 +1,54 @@
 'use client';
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import FollowButton from "./FollowButton"; // Import the follow button
+import FollowButton from "./FollowButton";
 
 const WhoToFollow = () => {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showMoreLoading, setShowMoreLoading] = useState(false);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/users/suggestions');
+      if (!response.ok) {
+        throw new Error('Failed to fetch user suggestions');
+      }
+      const data = await response.json();
+      setSuggestedUsers(data);
+    } catch (error) {
+      console.error('Error fetching suggested users:', error);
+      // Fallback to demo data if API fails
+      setSuggestedUsers([
+        {
+          id: '1',
+          name: 'Loading Failed',
+          handle: '@tryagain',
+          avatar: null
+        }
+      ]);
+    } finally {
+      setLoading(false);
+      setShowMoreLoading(false);
+      console.log(data);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch('/api/users/suggestions');
-        if (!response.ok) {
-          throw new Error('Failed to fetch user suggestions');
-        }
-        const data = await response.json();
-        setSuggestedUsers(data);
-      } catch (error) {
-        console.error('Error fetching suggested users:', error);
-        // Fallback to demo data if API fails
-        setSuggestedUsers([
-          {
-            id: '1',
-            name: 'Loading Failed',
-            handle: '@tryagain',
-            avatar: null
-          }
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
+
+  const handleShowMore = () => {
+    setShowMoreLoading(true);
+    fetchUsers();
+  };
+  
+  const handleFollowStateChange = () => {
+    // Refetch suggestions after someone is followed
+    setTimeout(fetchUsers, 500); // Small delay to allow follow API to complete
+  };
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-4">
@@ -55,12 +67,9 @@ const WhoToFollow = () => {
               <div className="h-8 w-16 rounded-full bg-gray-200 dark:bg-gray-700"></div>
             </div>
           ))
-        ) : (
+        ) : suggestedUsers.length > 0 ? (
           suggestedUsers.map((user) => (
-            <div
-              key={user.id}
-              className="flex items-center justify-between gap-2"
-            >
+            <div key={user.id} className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Avatar className="h-10 w-10">
                   <AvatarImage
@@ -78,16 +87,20 @@ const WhoToFollow = () => {
                   <p className="text-gray-500 text-sm">@{user.name}</p>
                 </div>
               </div>
-              <FollowButton userId={user.id} />
+              <FollowButton userId={user.id} onFollowStateChange={handleFollowStateChange} />
             </div>
           ))
+        ) : (
+          <p className="text-gray-500 text-sm">No suggestions available at the moment</p>
         )}
       </div>
       <Button
         className="text-blue-500 text-sm mt-4 hover:underline pl-0 hover:bg-transparent dark:hover:bg-transparent cursor-pointer"
         variant="ghost"
+        onClick={handleShowMore}
+        disabled={showMoreLoading}
       >
-        Show more
+        {showMoreLoading ? 'Loading...' : 'Show more'}
       </Button>
     </div>
   );
