@@ -5,10 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PostItem from "@/components/PostItem";
 import CommentItem from "@/components/CommentItem";
 
-export default function ClientTabs(
-  { posts = [], comments = [] },
-  isAdmin = false
-) {
+export default function ClientTabs({ posts = [], comments = [], isAdmin }) {
   const [activeTab, setActiveTab] = useState("posts");
 
   return (

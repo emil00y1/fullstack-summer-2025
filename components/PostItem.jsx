@@ -8,6 +8,7 @@ import {
   Globe,
   Lock,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -23,8 +24,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import LikeButton from "@/components/LikeButton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 
-export default function PostItem({ post, isAdmin = false }) {
+export default function PostItem({ post, isAdmin }) {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -35,10 +47,13 @@ export default function PostItem({ post, isAdmin = false }) {
     post.isPublic !== undefined ? post.isPublic : true
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Update isLiked state is now handled by the LikeButton component
   const createdAt = post.createdAt ? formatTimeAgo(post.createdAt) : "recently";
   const isOwnPost = session?.user?.username === post.user?.username;
+
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   const handleRepost = async (e) => {
     e.preventDefault();
@@ -49,6 +64,34 @@ export default function PostItem({ post, isAdmin = false }) {
 
     setIsReposted(!isReposted);
     setRepostCount((prev) => (isReposted ? prev - 1 : prev + 1));
+  };
+
+  const handleDelete = async (e) => {
+    e.preventDefault();
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`/api/posts/${post.encryptedId}/delete`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setIsAlertOpen(false);
+
+        // Redirect to the profile page or refresh the current page
+        setTimeout(() => {
+          router.refresh();
+        }, 100);
+      } else {
+        throw new Error("Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert("Failed to delete post. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleCommentClick = (e) => {
@@ -83,28 +126,28 @@ export default function PostItem({ post, isAdmin = false }) {
   };
 
   return (
-    <Link href={`/posts/${post.encryptedId}`} className="block">
-      <div className="px-1 py-2 md:p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors relative">
-        {/* Top right dropdown for post owner */}
-        {isOwnPost && (
-          <div className="absolute top-2 right-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 cursor-pointer"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+    <div className="px-1 py-2 md:p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors relative">
+      {/* Top right dropdown for post owner */}
+      {(isOwnPost || isAdmin) && (
+        <div className="absolute top-2 right-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 cursor-pointer"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {isOwnPost && (
                 <DropdownMenuItem
                   onClick={togglePrivacy}
-                  className="cursor-pointer flex justify-center"
+                  className="cursor-pointer flex"
                 >
                   {isLoading ? (
-                    <Loader2 className="animate-spin" />
+                    <Loader2 className="animate-spin justify-self-center" />
                   ) : isPublic ? (
                     <>
                       <Lock className="mr-2 h-4 w-4" />
@@ -117,55 +160,97 @@ export default function PostItem({ post, isAdmin = false }) {
                     </>
                   )}
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-
-        <div className="flex gap-3">
-          <div
-            onClick={(e) => {
-              e.preventDefault();
-              router.push(`/user/${post.user.username}`);
-            }}
-          >
-            <Avatar className="h-10 w-10">
-              <AvatarImage
-                src={post.user?.avatar}
-                alt={post.user?.name || "User"}
-              />
-              <AvatarFallback>
-                {post.user?.username?.[0]?.toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="flex-1">
-            <div className="md:flex items-center gap-1">
-              <span
-                className="font-semibold hover:underline cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  router.push(`/user/${post.user.username}`);
-                }}
+              )}
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onSelect={(e) => e.preventDefault()}
               >
-                {post.user?.username}
+                <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                  <AlertDialogTrigger
+                    className="flex text-red-600 cursor-pointer w-full items-center"
+                    onClick={() => setIsAlertOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2 text-red-600" />
+                    <span>Delete</span>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently
+                        delete this post.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="cursor-pointer">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="cursor-pointer bg-red-700 hover:bg-red-800"
+                      >
+                        {isDeleting ? (
+                          <Loader2 className="animate-spin justify-self-center" />
+                        ) : (
+                          <>Continue</>
+                        )}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <div
+          onClick={(e) => {
+            e.preventDefault();
+            router.push(`/user/${post.user.username}`);
+          }}
+        >
+          <Avatar className="h-10 w-10">
+            <AvatarImage
+              src={post.user?.avatar}
+              alt={post.user?.name || "User"}
+            />
+            <AvatarFallback>
+              {post.user?.username?.[0]?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+
+        <div className="flex-1">
+          <div className="md:flex items-center gap-1">
+            <span
+              className="font-semibold hover:underline cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                router.push(`/user/${post.user.username}`);
+              }}
+            >
+              {post.user?.username}
+            </span>
+            <div className="flex gap-1 items-center">
+              <span className="text-gray-500 text-sm md:text-base">
+                @{post.user?.username}
               </span>
-              <div className="flex gap-1 items-center">
-                <span className="text-gray-500 text-sm md:text-base">
-                  @{post.user?.username}
-                </span>
-                <span className="text-gray-500">·</span>
-                <span className="text-gray-500 text-xs md:text-sm">
-                  {createdAt}
-                </span>
-                {/* Show privacy badge for private posts */}
-                {!isPublic && (!isOwnPost || isAdmin) && (
-                  <Badge variant="outline" className="ml-1 bg-gray-100">
-                    <Lock className="h-3 w-3 mr-1" /> Private
-                  </Badge>
-                )}
-              </div>
+              <span className="text-gray-500">·</span>
+              <span className="text-gray-500 text-xs md:text-sm">
+                {createdAt}
+              </span>
+              {/* Show privacy badge for private posts */}
+              {!isPublic && (isOwnPost || isAdmin) && (
+                <Badge variant="outline" className="ml-1 bg-gray-100">
+                  <Lock className="h-3 w-3 mr-1" /> Private
+                </Badge>
+              )}
             </div>
+          </div>
+
+          <Link href={`/posts/${post.encryptedId}`} className="block">
             <div className="mt-2 md:mt-1">
               <p className="whitespace-pre-line">{post.body}</p>
               {post.image && (
@@ -178,41 +263,42 @@ export default function PostItem({ post, isAdmin = false }) {
                 </div>
               )}
             </div>
-            <div className="flex justify-between mt-3">
+          </Link>
+
+          <div className="flex justify-between mt-3">
+            <Button
+              onClick={handleCommentClick}
+              variant="ghost"
+              className="text-gray-500 hover:text-blue-500"
+              size="sm"
+            >
+              <MessageSquare className="h-4 w-4 mr-1" />
+              <span>{post.commentsCount || 0}</span>
+            </Button>
+            <div>
               <Button
-                onClick={handleCommentClick}
+                onClick={handleRepost}
                 variant="ghost"
-                className="text-gray-500 hover:text-blue-500"
+                className={`${
+                  isReposted
+                    ? "text-green-500"
+                    : "text-gray-500 hover:text-green-500"
+                }`}
                 size="sm"
               >
-                <MessageSquare className="h-4 w-4 mr-1" />
-                <span>{post.commentsCount || 0}</span>
+                <Repeat className="h-4 w-4 mr-1" />
+                <span>{repostCount}</span>
               </Button>
-              <div>
-                <Button
-                  onClick={handleRepost}
-                  variant="ghost"
-                  className={`${
-                    isReposted
-                      ? "text-green-500"
-                      : "text-gray-500 hover:text-green-500"
-                  }`}
-                  size="sm"
-                >
-                  <Repeat className="h-4 w-4 mr-1" />
-                  <span>{repostCount}</span>
-                </Button>
-                <LikeButton
-                  initialIsLiked={post.isLiked}
-                  initialLikesCount={post.likesCount}
-                  postEncryptedId={post.encryptedId}
-                  onLikeError={(error) => console.error("Like error:", error)}
-                />
-              </div>
+              <LikeButton
+                initialIsLiked={post.isLiked}
+                initialLikesCount={post.likesCount}
+                postEncryptedId={post.encryptedId}
+                onLikeError={(error) => console.error("Like error:", error)}
+              />
             </div>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

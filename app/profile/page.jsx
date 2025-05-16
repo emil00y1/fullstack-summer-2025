@@ -19,7 +19,7 @@ export default async function ProfilePage() {
     `SELECT 
       p.id, 
       p.content, 
-      p.created_at, 
+        p.created_at, 
       p.is_public,
       u.username,
       u.email,

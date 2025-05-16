@@ -44,8 +44,6 @@ export default function LikeButton({
 
       const method = isLiked ? "DELETE" : "POST";
 
-      console.log(`Making ${method} request to ${endpoint}`);
-
       const response = await fetch(endpoint, { method });
 
       if (!response.ok) {

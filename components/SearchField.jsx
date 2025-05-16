@@ -99,8 +99,6 @@ const SearchField = () => {
               People
             </div>
             {users.map((user) => {
-              console.log(user, "user");
-
               return (
                 <Link
                   href={`/user/${user.username}`}
