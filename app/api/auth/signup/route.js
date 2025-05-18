@@ -3,6 +3,7 @@ import { hash } from "bcrypt";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
+import { sendVerificationEmail } from "@/lib/emailService";
 
 // Server-side validation schema (matches auth.js and client-side)
 const signupSchema = z.object({
@@ -29,6 +30,10 @@ const signupSchema = z.object({
       "Password must contain at least one uppercase letter and special character (!*&?,.-_)"
     ),
 });
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(request) {
   try {
@@ -82,18 +87,49 @@ export async function POST(request) {
       );
     }
 
+    const verificationCode = generateOTP();
+
+    const verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
     // Hash the password
     const hashedPassword = await hash(password, 10);
 
     // Insert the user into the database
     await executeQuery(
-      "INSERT INTO users (id, username, email, password, created_at) VALUES (?, ?, ?, ?, ?)",
-      [userId, username, email, hashedPassword, new Date()]
+      `INSERT INTO users (
+        id, username, email, password, created_at, 
+        is_verified, verification_code, verification_code_expires_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId,
+        username,
+        email,
+        hashedPassword,
+        new Date(),
+        false,
+        verificationCode,
+        verificationCodeExpiresAt,
+      ]
     );
+
+    const emailSent = await sendVerificationEmail(
+      email,
+      username,
+      verificationCode
+    );
+
+    if (!emailSent) {
+      console.error("Failed to send verification email");
+      // Consider handling this case (perhaps delete the user and return an error)
+    }
 
     // Return success response
     return NextResponse.json(
-      { message: "Account created successfully" },
+      {
+        message:
+          "Account created! Please check your email for verification code.",
+        email: email, // Return the email for the verification page
+      },
       { status: 201 }
     );
   } catch (error) {

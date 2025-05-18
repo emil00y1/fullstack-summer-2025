@@ -63,7 +63,10 @@ async function seed() {
         avatar VARCHAR(255),
         bio TEXT,
         cover VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_verified BOOLEAN DEFAULT FALSE,
+        verification_code VARCHAR(6) NULL,
+        verification_code_expires_at TIMESTAMP NULL
       )
     `);
 
@@ -285,8 +288,8 @@ async function seed() {
     for (const user of users) {
       await connection.execute(
         `
-        INSERT INTO users (id, username, email, password, avatar, bio, cover)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (id, username, email, password, avatar, bio, cover, is_verified)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
         [
           user.id,
@@ -296,6 +299,7 @@ async function seed() {
           user.avatar,
           user.bio,
           user.cover,
+          true,
         ]
       );
     }
@@ -306,8 +310,8 @@ async function seed() {
 
     await connection.execute(
       `
-      INSERT INTO users (id, username, email, password, avatar, bio, cover)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (id, username, email, password, avatar, bio, cover, is_verified)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `,
       [
         adminId,
@@ -317,6 +321,7 @@ async function seed() {
         "https://api.dicebear.com/6.x/avataaars/svg?seed=admin",
         "System administrator",
         "https://picsum.photos/seed/admin/1200/400",
+        true,
       ]
     );
 

@@ -40,9 +40,13 @@ export async function POST(request) {
       bio: user.bio || "",
       cover: user.cover || "",
       avatar: user.avatar || "",
+      is_verified: user.is_verified,
     });
   } catch (error) {
     console.error("Verification error:", error);
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 500 });
+    return NextResponse.json(
+      { error: "An error occurred during verification" },
+      { status: 500 }
+    );
   }
 }

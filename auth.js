@@ -60,16 +60,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           const user = await response.json();
+
+          // Check if user's email is verified
+          if (!user.is_verified) {
+            throw new Error(
+              "Email not verified. Please check your email for verification code."
+            );
+          }
+
           return {
-            id: user.id, // UUID is already a string
+            id: user.id,
             username: user.username,
             email: user.email,
             createdAt: user.created_at,
-            bio: user.bio, // Bio field
-            cover: user.cover, // Cover field
-            avatar: user.avatar, // Added avatar field
+            bio: user.bio,
+            cover: user.cover,
+            avatar: user.avatar,
+            isVerified: user.is_verified,
           };
         } catch (error) {
+          if (error.message.includes("Email not verified")) {
+            throw error;
+          }
           // If error is not about missing fields, return generic error
           if (
             error.message !== "Email is required" &&
@@ -94,6 +106,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.bio = user.bio;
         token.cover = user.cover;
         token.avatar = user.avatar;
+        token.isVerified = user.isVerified;
         token.lastActive = Date.now();
       }
       return token;
@@ -107,6 +120,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.bio = token.bio;
         session.user.cover = token.cover;
         session.user.avatar = token.avatar;
+        session.user.isVerified = token.isVerified;
         session.user.lastActive = token.lastActive;
       }
       return session;

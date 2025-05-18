@@ -94,13 +94,7 @@ export function SignUpForm({ className, ...props }) {
         throw new Error(data.message || "Failed to sign up");
       }
 
-      // If signup is successful, sign in the user
-      await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: true,
-        callbackUrl: callbackUrl || "/",
-      });
+      router.push(`/verify?email=${encodeURIComponent(values.email)}`);
     } catch (error) {
       setServerError(error.message);
       setIsLoading(false);
