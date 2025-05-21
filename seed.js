@@ -45,6 +45,7 @@ async function seed() {
   try {
     console.log("Dropping existing tables if they exist...");
     await connection.execute("DROP TABLE IF EXISTS comment_likes");
+    await connection.execute("DROP TABLE IF EXISTS comments");
     await connection.execute("DROP TABLE IF EXISTS likes");
     await connection.execute("DROP TABLE IF EXISTS follows");
     await connection.execute("DROP TABLE IF EXISTS comments");
