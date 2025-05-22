@@ -79,10 +79,20 @@ export default function PostItem({ post, isAdmin }) {
       if (response.ok) {
         setIsAlertOpen(false);
 
-        // Redirect to the profile page or refresh the current page
-        setTimeout(() => {
-          router.refresh();
-        }, 100);
+        // Check current pathname to determine navigation behavior
+        const currentPath = window.location.pathname;
+
+        // If on individual post page, redirect to home
+        if (currentPath.includes("/posts/")) {
+          setTimeout(() => {
+            router.push("/");
+          }, 100);
+        } else {
+          // If on home page or profile page, just refresh
+          setTimeout(() => {
+            router.refresh();
+          }, 100);
+        }
       } else {
         throw new Error("Failed to delete post");
       }

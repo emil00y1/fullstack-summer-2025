@@ -6,7 +6,7 @@ import { SessionProvider } from "next-auth/react";
 import { CreatePost } from "./CreatePost";
 import { Separator } from "./ui/separator";
 
-export default function Feed() {
+export default function Feed({ isAdmin }) {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [offset, setOffset] = useState(0);
@@ -90,7 +90,13 @@ export default function Feed() {
         <div className="space-y-4">
           <SessionProvider>
             {posts.map((post) => {
-              return <PostItem key={post.encryptedId} post={post} />;
+              return (
+                <PostItem
+                  key={post.encryptedId}
+                  post={post}
+                  isAdmin={isAdmin}
+                />
+              );
             })}
           </SessionProvider>
 

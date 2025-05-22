@@ -43,6 +43,18 @@ export default async function PostPage({ params }) {
   const session = await auth();
   const userId = session?.user?.id;
 
+  let isAdmin = false;
+  if (userId) {
+    const adminCheck = await executeQuery(
+      `SELECT 1 FROM user_roles ur 
+   JOIN roles r ON ur.role_id = r.id 
+   WHERE ur.user_id = ? AND r.name = 'admin'
+   LIMIT 1`,
+      [userId]
+    );
+    isAdmin = adminCheck.length > 0;
+  }
+
   // Use the reusable function to fetch the post with likes
   let postData;
   try {
@@ -134,7 +146,7 @@ export default async function PostPage({ params }) {
           <h1 className="text-xl font-bold ml-4">Post</h1>
         </div>
         <div className="border-b">
-          <PostItem post={post} />
+          <PostItem post={post} isAdmin={isAdmin} />
         </div>
         <div className="py-2 px-4 border-b" id="comment-section">
           {session ? (

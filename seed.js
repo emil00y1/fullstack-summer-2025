@@ -147,13 +147,11 @@ async function seed() {
     console.log("Creating user_roles table...");
     await connection.execute(`
       CREATE TABLE user_roles (
-        id CHAR(36) NOT NULL PRIMARY KEY,
-        user_id CHAR(36) NOT NULL,
+        user_id CHAR(36) NOT NULL PRIMARY KEY,
         role_id CHAR(36) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (role_id) REFERENCES roles(id),
-        UNIQUE (user_id, role_id)
+        FOREIGN KEY (role_id) REFERENCES roles(id)
       )
     `);
 
@@ -328,17 +326,17 @@ async function seed() {
 
     console.log("Assigning roles to users...");
     // Assign user role to all users (including admin)
-    for (const user of [...users, { id: adminId }]) {
+    for (const user of users) {
       await connection.execute(
-        "INSERT INTO user_roles (id, user_id, role_id) VALUES (?, ?, ?)",
-        [uuidv4(), user.id, userRoleId]
+        "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)",
+        [user.id, userRoleId]
       );
     }
 
     // Assign admin role to admin user only
     await connection.execute(
-      "INSERT INTO user_roles (id, user_id, role_id) VALUES (?, ?, ?)",
-      [uuidv4(), adminId, adminRoleId]
+      "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)",
+      [adminId, adminRoleId]
     );
 
     console.log("Inserting sample posts...");
