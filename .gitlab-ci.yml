@@ -1,10 +1,51 @@
-# The Docker image that will be used to build your app
-image: node:23-slim
-create-pages:
-  pages:
-    # The folder that contains the files to be exposed at the Page URL
-    publish: public
+stages:
+  - test
+  - lint
+  - build
+  - deploy
+
+test:
+  image: node:23-slim
+  stage: test
+  script:
+    - npm install
+    - npm run test
+  artifacts:
+    paths:
+      - test-results.xml
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  coverage_format: cobertura
   rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+
+lint:
+  image: node:23-slim
+  stage: lint
+  script:
+    - npm install
+    - npm run lint
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+
+build:
+  image: node:23-slim
+  stage: build
+  script:
+    - npm install
+    - docker build -t exam-summer-2025 .
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
+
+deploy:
+  image: node:23-slim
+  stage: deploy
+  script:
+    - npm install -g vercel
+    - vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+    - vercel build --prod --token=$VERCEL_TOKEN
+    - vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+  environment:
+    name: production
+    url: https://exam-summer-2025.vercel.app
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event"
