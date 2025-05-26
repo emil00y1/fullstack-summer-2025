@@ -49,7 +49,6 @@ export function LoginForm({ className, ...props }) {
     errorMessage = "Invalid Credentials";
   }
 
-  // Initialize form
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -58,12 +57,9 @@ export function LoginForm({ className, ...props }) {
     },
   });
 
-  // Form submission handler - let NextAuth handle validation
   async function onSubmit(values, e) {
     setIsLoading(true);
 
-    // Send to NextAuth for server-side validation & authentication
-    // We let NextAuth handle the redirect with errors in the URL
     const result = await signIn("credentials", {
       email: values.email,
       password: values.password,
@@ -72,12 +68,7 @@ export function LoginForm({ className, ...props }) {
       error: "/login",
     });
 
-    // if (result?.error) {
-    //   router.push(`/login?error=${result.error}`);
-    //   setIsLoading(false);
-    // } else {
-    //   router.push(callbackUrl || "/");
-    // }
+
   }
 
   return (

@@ -1,0 +1,11 @@
+{
+  "id": "test-env",
+  "name": "Test Environment",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "enabled": true
+    }
+  ]
+}

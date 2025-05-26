@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="27" failures="0" errors="0" time="6.436">
+  <testsuite name="Date Utils" errors="0" failures="0" skipped="0" timestamp="2025-05-26T10:21:31" time="1.837" tests="1">
+    <testcase classname="Date Utils should format time correctly" name="Date Utils should format time correctly" time="0.023">
+    </testcase>
+  </testsuite>
+  <testsuite name="Validation Schemas" errors="0" failures="0" skipped="0" timestamp="2025-05-26T10:21:31" time="2.003" tests="3">
+    <testcase classname="Validation Schemas Signup Schema should validate correct signup data" name="Validation Schemas Signup Schema should validate correct signup data" time="0.028">
+    </testcase>
+    <testcase classname="Validation Schemas Signup Schema should reject empty password" name="Validation Schemas Signup Schema should reject empty password" time="0.047">
+    </testcase>
+    <testcase classname="Validation Schemas Signup Schema should reject short password" name="Validation Schemas Signup Schema should reject short password" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="Crypto Utils" errors="0" failures="0" skipped="0" timestamp="2025-05-26T10:21:31" time="1.986" tests="8">
+    <testcase classname="Crypto Utils should encrypt and decrypt &quot;simple-id&quot; correctly" name="Crypto Utils should encrypt and decrypt &quot;simple-id&quot; correctly" time="0.019">
+    </testcase>
+    <testcase classname="Crypto Utils should encrypt and decrypt &quot;complex-id-123-with-dashes&quot; correctly" name="Crypto Utils should encrypt and decrypt &quot;complex-id-123-with-dashes&quot; correctly" time="0.002">
+    </testcase>
+    <testcase classname="Crypto Utils should encrypt and decrypt &quot;uuid-a1b2c3d4-e5f6-7890-abcd-ef1234567890&quot; correctly" name="Crypto Utils should encrypt and decrypt &quot;uuid-a1b2c3d4-e5f6-7890-abcd-ef1234567890&quot; correctly" time="0.002">
+    </testcase>
+    <testcase classname="Crypto Utils should encrypt and decrypt &quot;very-long-id-that-might-cause-issues-with-encryption-and-decryption-functions&quot; correctly" name="Crypto Utils should encrypt and decrypt &quot;very-long-id-that-might-cause-issues-with-encryption-and-decryption-functions&quot; correctly" time="0.002">
+    </testcase>
+    <testcase classname="Crypto Utils should return different encrypted values for same input" name="Crypto Utils should return different encrypted values for same input" time="0.003">
+    </testcase>
+    <testcase classname="Crypto Utils should handle empty string" name="Crypto Utils should handle empty string" time="0.002">
+    </testcase>
+    <testcase classname="Crypto Utils should throw error for invalid encrypted data" name="Crypto Utils should throw error for invalid encrypted data" time="0.121">
+    </testcase>
+    <testcase classname="Crypto Utils should handle special characters in IDs" name="Crypto Utils should handle special characters in IDs" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="CreatePost Component" errors="0" failures="0" skipped="0" timestamp="2025-05-26T10:21:31" time="2.913" tests="3">
+    <testcase classname="CreatePost Component renders create post form when authenticated" name="CreatePost Component renders create post form when authenticated" time="0.225">
+    </testcase>
+    <testcase classname="CreatePost Component shows character count when typing" name="CreatePost Component shows character count when typing" time="0.028">
+    </testcase>
+    <testcase classname="CreatePost Component successfully creates a post" name="CreatePost Component successfully creates a post" time="0.06">
+    </testcase>
+  </testsuite>
+  <testsuite name="CommentForm Component" errors="0" failures="0" skipped="0" timestamp="2025-05-26T10:21:31" time="2.94" tests="5">
+    <testcase classname="CommentForm Component renders comment form when authenticated" name="CommentForm Component renders comment form when authenticated" time="0.215">
+    </testcase>
+    <testcase classname="CommentForm Component disables reply button when comment is empty" name="CommentForm Component disables reply button when comment is empty" time="0.037">
+    </testcase>
+    <testcase classname="CommentForm Component enables reply button when comment has content" name="CommentForm Component enables reply button when comment has content" time="0.035">
+    </testcase>
+    <testcase classname="CommentForm Component successfully submits comment" name="CommentForm Component successfully submits comment" time="0.049">
+    </testcase>
+    <testcase classname="CommentForm Component clears form after successful submission" name="CommentForm Component clears form after successful submission" time="0.039">
+    </testcase>
+  </testsuite>
+  <testsuite name="PostItem Component" errors="0" failures="0" skipped="0" timestamp="2025-05-26T10:21:31" time="3.336" tests="7">
+    <testcase classname="PostItem Component renders post content correctly" name="PostItem Component renders post content correctly" time="0.129">
+    </testcase>
+    <testcase classname="PostItem Component shows dropdown menu for own posts" name="PostItem Component shows dropdown menu for own posts" time="0.153">
+    </testcase>
+    <testcase classname="PostItem Component does not show dropdown for other users posts" name="PostItem Component does not show dropdown for other users posts" time="0.05">
+    </testcase>
+    <testcase classname="PostItem Component navigates to post page when clicking comment button" name="PostItem Component navigates to post page when clicking comment button" time="0.059">
+    </testcase>
+    <testcase classname="PostItem Component shows private badge for private posts when user is owner" name="PostItem Component shows private badge for private posts when user is owner" time="0.021">
+    </testcase>
+    <testcase classname="PostItem Component does not show private badge for private posts when user is not owner" name="PostItem Component does not show private badge for private posts when user is not owner" time="0.011">
+    </testcase>
+    <testcase classname="PostItem Component navigates to user profile when clicking username" name="PostItem Component navigates to user profile when clicking username" time="0.012">
+    </testcase>
+  </testsuite>
+</testsuites>

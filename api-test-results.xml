@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Your App API Tests" tests="8" time="2.845">
+  <testsuite name="Health Check" id="bb2a2a58-2869-49be-ab2c-b30688dcfc77" timestamp="2025-05-26T10:24:25.629Z" tests="3" failures="0" errors="0" time="0.190">
+    <testcase name="Health check returns 200" time="0.190" classname="HealthCheck"/>
+    <testcase name="Response has status ok" time="0.190" classname="HealthCheck"/>
+    <testcase name="Response time is acceptable" time="0.190" classname="HealthCheck"/>
+  </testsuite>
+  <testsuite name="User Signup" id="08110ab7-1a28-492d-b30f-6844b98e497f" timestamp="2025-05-26T10:24:25.629Z" tests="3" failures="0" errors="0" time="1.325">
+    <testcase name="Signup returns success or conflict" time="1.325" classname="UserSignup"/>
+    <testcase name="Response is JSON" time="1.325" classname="UserSignup"/>
+    <testcase name="Success response has correct message" time="1.325" classname="UserSignup"/>
+  </testsuite>
+  <testsuite name="Get Posts (Public)" id="dbe0c2f6-c062-48cc-aa9e-c10d125b64cf" timestamp="2025-05-26T10:24:25.629Z" tests="4" failures="0" errors="0" time="0.229">
+    <testcase name="Get posts returns 200" time="0.229" classname="GetPostsPublic"/>
+    <testcase name="Response is an array" time="0.229" classname="GetPostsPublic"/>
+    <testcase name="Posts have required structure" time="0.229" classname="GetPostsPublic"/>
+    <testcase name="Response time is acceptable" time="0.229" classname="GetPostsPublic"/>
+  </testsuite>
+  <testsuite name="Create Post (No Auth)" id="52c3bbc4-b633-46cc-b164-2c05185dd359" timestamp="2025-05-26T10:24:25.629Z" tests="2" failures="0" errors="0" time="0.134">
+    <testcase name="Create post requires authentication" time="0.134" classname="CreatePostNoAuth"/>
+    <testcase name="Error message is correct" time="0.134" classname="CreatePostNoAuth"/>
+  </testsuite>
+  <testsuite name="Follow User (No Auth)" id="7e2a6e08-ecc9-4bad-8a29-bf56894f488d" timestamp="2025-05-26T10:24:25.629Z" tests="2" failures="0" errors="0" time="0.162">
+    <testcase name="Follow requires authentication" time="0.162" classname="FollowUserNoAuth"/>
+    <testcase name="Error message is correct" time="0.162" classname="FollowUserNoAuth"/>
+  </testsuite>
+  <testsuite name="Get Comments (Invalid Post ID)" id="645ad6b6-3afc-47bb-917b-2acccdfcbda8" timestamp="2025-05-26T10:24:25.629Z" tests="2" failures="0" errors="0" time="0.426">
+    <testcase name="Invalid post ID returns 400" time="0.426" classname="GetCommentsInvalidPostId"/>
+    <testcase name="Error message is correct" time="0.426" classname="GetCommentsInvalidPostId"/>
+  </testsuite>
+  <testsuite name="Create Comment (No Auth)" id="b577e4ae-f4cd-4003-8f8f-a878af5aaa29" timestamp="2025-05-26T10:24:25.629Z" tests="2" failures="0" errors="0" time="0.152">
+    <testcase name="Create comment requires auth or invalid post" time="0.152" classname="CreateCommentNoAuth"/>
+    <testcase name="Auth error message is correct" time="0.152" classname="CreateCommentNoAuth"/>
+  </testsuite>
+  <testsuite name="Invalid Endpoint Test" id="91f3ff09-0dd7-4f59-90f9-593412d9e271" timestamp="2025-05-26T10:24:25.629Z" tests="1" failures="0" errors="0" time="0.227">
+    <testcase name="Invalid endpoint returns 404" time="0.227" classname="InvalidEndpointTest"/>
+  </testsuite>
+</testsuites>
