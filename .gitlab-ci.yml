@@ -91,6 +91,7 @@ api-test:
   services:
     - name: mysql:latest
       alias: mysql
+      command: ["mysqld", "--default-authentication-plugin=mysql_native_password", "--skip-ssl"]
   variables:
     DATABASE_URL: "mysql://root:password@mysql:3306/exam_summer_2025"
     MYSQL_ROOT_PASSWORD: password
@@ -108,22 +109,14 @@ api-test:
     - build
   before_script:
     - echo "Installing dependencies..."
-    - apk add --no-cache curl wget
-    - echo "Installing real MySQL client..."
-    - wget https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
-    - tar -xf mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
-    - mv mysql-8.0.40-linux-glibc2.17-x86_64-minimal /usr/local/mysql
-    - export PATH="/usr/local/mysql/bin:$PATH"
+    - apk add --no-cache curl
     - npm ci --cache .npm --prefer-offline
-    - echo "Waiting for MySQL to be ready..."
-    - for i in $(seq 1 30); do if mysqladmin ping -h mysql --ssl-mode=DISABLED --silent; then echo "MySQL is ready!"; break; fi; echo "Waiting for MySQL... ($i/30)"; sleep 2; done
-    - echo "Creating database..."
-    - mysql -h mysql -u root -p$MYSQL_ROOT_PASSWORD --ssl-mode=DISABLED -e "CREATE DATABASE IF NOT EXISTS exam_summer_2025;"
-    - echo "Testing database connection with current environment variables:"
+    - echo "Waiting for MySQL service to be ready..."
+    - sleep 10
+    - echo "Environment variables:"
     - echo "DEV_DB_HOST:" $DEV_DB_HOST
     - echo "DEV_DB_PORT:" $DEV_DB_PORT
     - echo "NODE_ENV:" $NODE_ENV
-    - mysql -h $DEV_DB_HOST -P $DEV_DB_PORT -u $DEV_DB_USER -p$DEV_DB_PASSWORD --ssl-mode=DISABLED $DEV_DB_NAME -e "SELECT 1;"
     - echo "Starting Next.js with environment:" $NODE_ENV
     - PORT=3000 npm run start > next.log 2>&1 &
     - export NEXT_PID=$!
