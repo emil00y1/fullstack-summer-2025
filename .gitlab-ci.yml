@@ -89,9 +89,9 @@ api-test:
   stage: api-test
   image: node:18-alpine
   services:
-    - name: mysql:latest
+    - name: mysql:8.0
       alias: mysql
-      command: ["mysqld", "--default-authentication-plugin=mysql_native_password", "--skip-ssl"]
+      command: ["mysqld", "--default-authentication-plugin=mysql_native_password", "--disable-ssl"]
   variables:
     DATABASE_URL: "mysql://root:password@mysql:3306/exam_summer_2025"
     MYSQL_ROOT_PASSWORD: password
@@ -112,11 +112,15 @@ api-test:
     - apk add --no-cache curl
     - npm ci --cache .npm --prefer-offline
     - echo "Waiting for MySQL service to be ready..."
-    - sleep 10
+    - sleep 15
     - echo "Environment variables:"
     - echo "DEV_DB_HOST:" $DEV_DB_HOST
     - echo "DEV_DB_PORT:" $DEV_DB_PORT
     - echo "NODE_ENV:" $NODE_ENV
+    - echo "DATABASE_URL:" $DATABASE_URL
+    - echo "Checking for .env files that might override CI variables:"
+    - ls -la .env* || echo "No .env files found"
+    - if [ -f .env ]; then echo "Moving .env to .env.backup to use CI variables"; mv .env .env.backup; fi
     - echo "Starting Next.js with environment:" $NODE_ENV
     - PORT=3000 npm run start > next.log 2>&1 &
     - export NEXT_PID=$!
