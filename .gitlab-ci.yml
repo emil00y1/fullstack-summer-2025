@@ -110,11 +110,13 @@ api-test:
     - apk add --no-cache mysql-client curl
     - npm ci --cache .npm --prefer-offline
     - echo "Waiting for MySQL to be ready..."
-    - until mysql -h mysql -u root -ppassword -e "SELECT 1"; do
+    - |
+      echo "Waiting for MySQL to be ready..."
+      until mysql -h mysql -u root -ppassword -e "SELECT 1"; do
         echo "MySQL not ready yet. Retrying in 5 seconds..."
         sleep 5
       done
-    - echo "MySQL is ready."
+      echo "MySQL is ready."
     - echo "Environment variables:"
     - echo "DEV_DB_HOST:" $DEV_DB_HOST
     - echo "DEV_DB_PORT:" $DEV_DB_PORT
