@@ -15,7 +15,6 @@ cache:
     - node_modules/
     - .next/cache/
 
-
 lint:
   stage: lint
   image: node:18-alpine
@@ -27,7 +26,6 @@ lint:
     - main
     - merge_requests
     - develop
-
 
 security-audit:
   stage: security  
@@ -67,7 +65,6 @@ unit-test:
     - merge_requests
     - develop
 
-
 build:
   stage: build
   image: node:18-alpine
@@ -87,7 +84,6 @@ build:
   only:
     - main
     - develop
-
 
 api-test:
   stage: api-test
@@ -111,59 +107,30 @@ api-test:
   dependencies:
     - build
   before_script:
-    - apk add --no-cache mysql-client curl
+    - echo "Installing dependencies..."
+    - apk add --no-cache curl wget
+    - echo "Installing real MySQL client..."
+    - wget https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
+    - tar -xf mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
+    - mv mysql-8.0.40-linux-glibc2.17-x86_64-minimal /usr/local/mysql
+    - export PATH="/usr/local/mysql/bin:$PATH"
     - npm ci --cache .npm --prefer-offline
-    
-    # Wait for MySQL
-    - |
-      echo "⏳ Waiting for MySQL to be ready..."
-      for i in {1..30}; do
-        if mysqladmin ping -h mysql --silent; then 
-          echo "✅ MySQL is ready!"
-          break
-        fi
-        echo "⏳ Waiting for MySQL... ($i/30)"
-        sleep 2
-      done
-    
-    # Create database  
-    - mysql -h mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE IF NOT EXISTS exam_summer_2025;"
-    
-    # Test database connection before starting Next.js
-    - echo "🔍 Testing database connection with current environment variables:"
-    - echo "DEV_DB_HOST: $DEV_DB_HOST"
-    - echo "DEV_DB_PORT: $DEV_DB_PORT" 
-    - echo "NODE_ENV: $NODE_ENV"
-    - mysql -h $DEV_DB_HOST -P $DEV_DB_PORT -u $DEV_DB_USER -p$DEV_DB_PASSWORD -e "SELECT 1;" $DEV_DB_NAME
-    
-    # Start Next.js with logging
-    - echo "🚀 Starting Next.js with environment: $NODE_ENV"
+    - echo "Waiting for MySQL to be ready..."
+    - for i in $(seq 1 30); do if mysqladmin ping -h mysql --ssl-mode=DISABLED --silent; then echo "MySQL is ready!"; break; fi; echo "Waiting for MySQL... ($i/30)"; sleep 2; done
+    - echo "Creating database..."
+    - mysql -h mysql -u root -p$MYSQL_ROOT_PASSWORD --ssl-mode=DISABLED -e "CREATE DATABASE IF NOT EXISTS exam_summer_2025;"
+    - echo "Testing database connection with current environment variables:"
+    - echo "DEV_DB_HOST:" $DEV_DB_HOST
+    - echo "DEV_DB_PORT:" $DEV_DB_PORT
+    - echo "NODE_ENV:" $NODE_ENV
+    - mysql -h $DEV_DB_HOST -P $DEV_DB_PORT -u $DEV_DB_USER -p$DEV_DB_PASSWORD --ssl-mode=DISABLED $DEV_DB_NAME -e "SELECT 1;"
+    - echo "Starting Next.js with environment:" $NODE_ENV
     - PORT=3000 npm run start > next.log 2>&1 &
     - export NEXT_PID=$!
-    - echo "Next.js PID: $NEXT_PID"
-    
-    # Wait and show logs if it fails
-    - |
-      echo "⏳ Waiting for Next.js API to be ready..."
-      for i in {1..60}; do
-        if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then 
-          echo "✅ Next.js API is ready!"
-          break
-        fi
-        if [ $i -eq 20 ]; then
-          echo "📝 Next.js logs after 20 attempts:"
-          head -50 next.log
-        fi
-        echo "⏳ Waiting for Next.js API... ($i/60)"
-        sleep 2
-      done
-      
-      # If still not ready, show full logs
-      if ! curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
-        echo "❌ Next.js failed to start. Full logs:"
-        cat next.log
-        exit 1
-      fi
+    - echo "Next.js PID:" $NEXT_PID
+    - echo "Waiting for Next.js API to be ready..."
+    - for i in $(seq 1 60); do if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then echo "Next.js API is ready!"; break; fi; if [ $i -eq 20 ]; then echo "Next.js logs after 20 attempts:"; head -50 next.log; fi; echo "Waiting for Next.js API... ($i/60)"; sleep 2; done
+    - if ! curl -s http://localhost:3000/api/health > /dev/null 2>&1; then echo "Next.js failed to start. Full logs:"; cat next.log; exit 1; fi
   script:
     - npm run test:api:ci
   after_script:
@@ -204,18 +171,10 @@ health-check:
   before_script:
     - apk add --no-cache curl
   script:
-    - |
-      echo "🔍 Checking deployment health..."
-      for i in {1..10}; do
-        if curl -f -s https://exam-summer-2025.vercel.app/api/health; then
-          echo "✅ Deployment is healthy!"
-          exit 0
-        fi
-        echo "⏳ Health check failed, retrying... ($i/10)"
-        sleep 30
-      done
-      echo "❌ Deployment health check failed"
-      exit 1
+    - echo "Checking deployment health..."
+    - for i in $(seq 1 10); do if curl -f -s https://exam-summer-2025.vercel.app/api/health; then echo "Deployment is healthy!"; exit 0; fi; echo "Health check failed, retrying... ($i/10)"; sleep 30; done
+    - echo "Deployment health check failed"
+    - exit 1
   only:
     - main
   needs:
