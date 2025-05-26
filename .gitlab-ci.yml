@@ -1,6 +1,7 @@
 # Complete GitLab CI/CD Pipeline
 stages:
   - lint
+  - security
   - unit-test
   - build  
   - api-test
@@ -25,6 +26,22 @@ lint:
     - npm ci --cache .npm --prefer-offline
   script:
     - npm run lint:check
+  only:
+    - main
+    - merge_requests
+    - develop
+
+# ============== SECURITY STAGE ==============
+
+security-audit:
+  stage: security  # Run with lint stage to save time
+  image: node:18-alpine
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - npm audit --audit-level moderate
+    - echo "Security audit completed"
+  allow_failure: true  # Don't block pipeline initially
   only:
     - main
     - merge_requests
