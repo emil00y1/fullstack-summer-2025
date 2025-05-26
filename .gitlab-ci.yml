@@ -111,8 +111,15 @@ api-test:
   dependencies:
     - build
   before_script:
-    - apk add --no-cache mysql-client curl
+    # Install actual MySQL client (not MariaDB)
+    - apk add --no-cache curl
+    - wget https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
+    - tar -xf mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
+    - mv mysql-8.0.40-linux-glibc2.17-x86_64-minimal /usr/local/mysql
+    - export PATH="/usr/local/mysql/bin:$PATH"
+    
     - npm ci --cache .npm --prefer-offline
+    # Wait for MySQL to be ready (real MySQL syntax)
     - |
       echo "⏳ Waiting for MySQL to be ready..."
       for i in {1..30}; do
@@ -121,19 +128,6 @@ api-test:
           break
         fi
         echo "⏳ Waiting for MySQL... ($i/30)"
-        sleep 2
-      done
-    - mysql -h mysql -u root -p$MYSQL_ROOT_PASSWORD --ssl-mode=DISABLED -e "CREATE DATABASE IF NOT EXISTS exam_summer_2025;"
-    - PORT=3000 npm run start &
-    - export NEXT_PID=$!
-    - |
-      echo "⏳ Waiting for Next.js API to be ready..."
-      for i in {1..60}; do
-        if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then 
-          echo "✅ Next.js API is ready!"
-          break
-        fi
-        echo "⏳ Waiting for Next.js API... ($i/60)"
         sleep 2
       done
   script:
