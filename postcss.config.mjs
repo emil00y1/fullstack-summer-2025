@@ -1,5 +1,5 @@
 const config = {
-  plugins: ['tailwindcss'],
+  plugins: ['@tailwindcss/postcss'], // ✅ Use this instead of 'tailwindcss'
 };
 
 export default config;

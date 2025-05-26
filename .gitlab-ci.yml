@@ -76,7 +76,7 @@ build:
     NEXTAUTH_SECRET: $NEXTAUTH_SECRET
     NODE_ENV: "production"
   before_script:
-    - npm ci --cache .npm --prefer-offline
+    - npm ci --cache .npm --prefer-offline --include=dev
   script:
     - npm run build
     - npm install -g vercel@latest
