@@ -116,14 +116,14 @@ api-test:
     - |
       echo "⏳ Waiting for MySQL to be ready..."
       for i in {1..30}; do
-        if mysqladmin ping -h mysql --silent; then 
+        if mysqladmin ping -h mysql --ssl-mode=DISABLED --silent; then 
           echo "✅ MySQL is ready!"
           break
         fi
         echo "⏳ Waiting for MySQL... ($i/30)"
         sleep 2
       done
-    - mysql -h mysql -u root -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE IF NOT EXISTS exam_summer_2025;"
+    - mysql -h mysql -u root -p$MYSQL_ROOT_PASSWORD --ssl-mode=DISABLED -e "CREATE DATABASE IF NOT EXISTS exam_summer_2025;"
     - PORT=3000 npm run start &
     - export NEXT_PID=$!
     - |
