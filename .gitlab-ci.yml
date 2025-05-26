@@ -79,8 +79,6 @@ build:
     - npm ci --cache .npm --prefer-offline --include=dev
   script:
     - npm run build
-    - npm install -g vercel@latest
-    - vercel build --token=$VERCEL_TOKEN
   artifacts:
     paths:
       - .next/
