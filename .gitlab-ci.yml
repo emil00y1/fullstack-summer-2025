@@ -164,13 +164,12 @@ deploy:production:
   before_script:
     - npm install -g vercel@latest
   script:
-    - vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+    - vercel deploy --prod --token=$VERCEL_TOKEN
   environment:
     name: production
     url: https://exam-summer-2025.vercel.app/
   only:
     - main
-  when: manual
 
 health-check:
   stage: deploy
@@ -186,4 +185,3 @@ health-check:
     - main
   needs:
     - deploy:production
-  when: manual
