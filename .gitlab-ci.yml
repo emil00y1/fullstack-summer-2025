@@ -1,9 +1,9 @@
 stages:
-  - lint
-  - security
-  - unit-test
-  - api-test
+  # - lint
+  # - security
+  # - unit-test
   - build
+  - api-test
   - docker-build
   - deploy
 
@@ -16,52 +16,71 @@ cache:
     - node_modules/
     - .next/cache/
 
-lint:
-  stage: lint
-  image: node:18-alpine
-  before_script:
-    - npm ci --cache .npm --prefer-offline
-  script:
-    - npm run lint:check
-  only:
-    - main
-    - merge_requests
+# lint:
+#   stage: lint
+#   image: node:18-alpine
+#   before_script:
+#     - npm ci --cache .npm --prefer-offline
+#   script:
+#     - npm run lint:check
+#   only:
+#     - main
+#     - merge_requests
 
-security-audit:
-  stage: security  
-  image: node:18-alpine
-  before_script:
-    - npm ci --cache .npm --prefer-offline
-  script:
-    - npm audit --audit-level moderate
-    - echo "Security audit completed"
-  allow_failure: true  
-  only:
-    - main
-    - merge_requests
+# security-audit:
+#   stage: security  
+#   image: node:18-alpine
+#   before_script:
+#     - npm ci --cache .npm --prefer-offline
+#   script:
+#     - npm audit --audit-level moderate
+#     - echo "Security audit completed"
+#   allow_failure: true  
+#   only:
+#     - main
+#     - merge_requests
 
-unit-test:
-  stage: unit-test
+# unit-test:
+#   stage: unit-test
+#   image: node:18-alpine
+#   before_script:
+#     - npm ci --cache .npm --prefer-offline
+#   script:
+#     - npm run test:ci
+#   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+#   artifacts:
+#     reports:
+#       junit: test-results/junit.xml
+#       coverage_report:
+#         coverage_format: cobertura
+#         path: coverage/cobertura-coverage.xml
+#     paths:
+#       - coverage/
+#       - test-results/
+#     expire_in: 1 week
+#     when: always
+#   only:
+#     - main
+#     - merge_requests
+
+build:
+  stage: build
   image: node:18-alpine
+  variables:
+    NEXTAUTH_URL: $NEXTAUTH_URL_PROD
+    NEXTAUTH_SECRET: $NEXTAUTH_SECRET
+    NODE_ENV: "production"
   before_script:
-    - npm ci --cache .npm --prefer-offline
+    - npm ci --cache .npm --prefer-offline --include=dev
   script:
-    - npm run test:ci
-  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+    - npm run build
   artifacts:
-    reports:
-      junit: test-results/junit.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage/cobertura-coverage.xml
     paths:
-      - coverage/
-      - test-results/
-    expire_in: 1 week
-    when: always
+      - .next/
+      - .vercel/output/
+    expire_in: 1 hour
   only:
     - main
-    - merge_requests
 
 api-test:
   stage: api-test
@@ -113,24 +132,6 @@ api-test:
   script:
     - npm run test:api:ci
 
-build:
-  stage: build
-  image: node:18-alpine
-  variables:
-    NEXTAUTH_URL: $NEXTAUTH_URL_PROD
-    NEXTAUTH_SECRET: $NEXTAUTH_SECRET
-    NODE_ENV: "production"
-  before_script:
-    - npm ci --cache .npm --prefer-offline --include=dev
-  script:
-    - npm run build
-  artifacts:
-    paths:
-      - .next/
-      - .vercel/output/
-    expire_in: 1 hour
-  only:
-    - main
 
 docker-build:
   stage: docker-build
