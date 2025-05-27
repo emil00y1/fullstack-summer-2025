@@ -94,6 +94,22 @@ api-test:
         exit 1
       fi
       echo "MySQL is ready."
+    - echo "Starting Next.js server..."
+    - npm run start &  
+    - sleep 10
+    - |
+      echo "Waiting for Next.js to be ready..."
+      timeout=0
+      until curl -s http://localhost:3000/api/health || [ $timeout -eq 30 ]; do
+        echo "Next.js not ready yet. Retrying..."
+        sleep 2
+        timeout=$((timeout + 1))
+      done
+      if [ $timeout -eq 30 ]; then
+        echo "Next.js startup timeout"
+        exit 1
+      fi
+      echo "Next.js is ready!"
   script:
     - npm run test:api:ci
 
