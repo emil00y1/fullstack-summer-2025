@@ -67,11 +67,9 @@ api-test:
   stage: api-test
   image: node:18-alpine
   services:
-    - name: mysql:8.0.39
-      alias: mysql
-      command: ['--default-authentication-plugin=mysql_native_password']  # Add this
+    - name: mariadb:latest
+      alias: mysql  # Keep alias as 'mysql' so your code doesn't need to change
   variables:
-    DATABASE_URL: "mysql://root:password@mysql:3306/exam_summer_2025"
     MYSQL_ROOT_PASSWORD: password
     MYSQL_DATABASE: exam_summer_2025
     DEV_DB_HOST: mysql
@@ -81,12 +79,12 @@ api-test:
     DEV_DB_NAME: exam_summer_2025
     NODE_ENV: "test"
   before_script:
-    - apk add --no-cache mysql-client curl  # Add mysql-client back
+    - apk add --no-cache mysql-client curl
     - npm ci --cache .npm --prefer-offline
     - |
       echo "Waiting for MySQL to be ready..."
       timeout=0
-      until mysqladmin ping -h mysql -u root -ppassword --silent || [ $timeout -eq 30 ]; do
+      until mysql -h mysql -u root -ppassword -e "SELECT 1" || [ $timeout -eq 30 ]; do
         echo "MySQL not ready yet. Retrying in 5 seconds..."
         sleep 5
         timeout=$((timeout + 1))
