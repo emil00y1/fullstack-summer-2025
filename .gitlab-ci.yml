@@ -2,8 +2,9 @@ stages:
   - lint
   - security
   - unit-test
-  - build  
   - api-test
+  - build
+  - docker-build
   - deploy
 
 variables:
@@ -25,7 +26,6 @@ lint:
   only:
     - main
     - merge_requests
-    - develop
 
 security-audit:
   stage: security  
@@ -39,7 +39,6 @@ security-audit:
   only:
     - main
     - merge_requests
-    - develop
 
 unit-test:
   stage: unit-test
@@ -63,7 +62,23 @@ unit-test:
   only:
     - main
     - merge_requests
-    - develop
+
+api-test:
+  stage: api-test
+  image: docker/compose:latest
+  services:
+    - docker:dind
+  script:
+    - docker-compose build
+    - docker-compose up -d mysql
+    - sleep 30 
+    - docker-compose run --rm next-app npm run test:api:ci
+  after_script:
+    - docker-compose logs
+    - docker-compose down
+  only:
+    - main
+    - merge_requests
 
 build:
   stage: build
@@ -83,78 +98,21 @@ build:
     expire_in: 1 hour
   only:
     - main
-    - develop
 
-api-test:
-  stage: api-test
-  image: node:18-alpine
+docker-build:
+  stage: docker-build
+  image: docker:latest
   services:
-    - name: mysql:8.0.39
-      alias: mysql
-  variables:
-    DATABASE_URL: "mysql://root:password@mysql:3306/exam_summer_2025"
-    MYSQL_ROOT_PASSWORD: password
-    MYSQL_DATABASE: exam_summer_2025
-    DEV_DB_HOST: mysql
-    DEV_DB_PORT: 3306
-    DEV_DB_USER: root
-    DEV_DB_PASSWORD: password
-    DEV_DB_NAME: exam_summer_2025
-    NEXTAUTH_URL: "http://localhost:3000"
-    NEXTAUTH_SECRET: $NEXTAUTH_SECRET
-    JWT_SECRET: $JWT_SECRET
-    NODE_ENV: "test"
-  dependencies:
-    - build
+    - docker:dind
   before_script:
-    - apk add --no-cache mysql-client curl
-    - npm ci --cache .npm --prefer-offline
-    - echo "Waiting for MySQL to be ready..."
-    - |
-      echo "Waiting for MySQL to be ready..."
-      until mysql -h mysql -u root -ppassword -e "SELECT 1"; do
-        echo "MySQL not ready yet. Retrying in 5 seconds..."
-        sleep 5
-      done
-      echo "MySQL is ready."
-    - echo "Environment variables:"
-    - echo "DEV_DB_HOST:" $DEV_DB_HOST
-    - echo "DEV_DB_PORT:" $DEV_DB_PORT
-    - echo "NODE_ENV:" $NODE_ENV
-    - echo "DATABASE_URL:" $DATABASE_URL
-    - echo "Checking for .env files that might override CI variables:"
-    - ls -la .env* || echo "No .env files found"
-    - if [ -f .env ]; then echo "Moving .env to .env.backup to use CI variables"; mv .env .env.backup; fi
-    - export DEV_DB_HOST=$DEV_DB_HOST
-    - export DEV_DB_PORT=$DEV_DB_PORT
-    - export DEV_DB_USER=$DEV_DB_USER
-    - export DEV_DB_PASSWORD=$DEV_DB_PASSWORD
-    - export DEV_DB_NAME=$DEV_DB_NAME
-    - export NODE_ENV=$NODE_ENV
-    - echo "Starting Next.js with environment:" $NODE_ENV
-    - PORT=3000 npm run start > next.log 2>&1 &
-    - export NEXT_PID=$!
-    - echo "Next.js PID:" $NEXT_PID
-    - echo "Waiting for Next.js API to be ready..."
-    - for i in $(seq 1 60); do if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then echo "Next.js API is ready!"; break; fi; if [ $i -eq 20 ]; then echo "Next.js logs after 20 attempts:"; head -50 next.log; fi; echo "Waiting for Next.js API... ($i/60)"; sleep 2; done
-    - if ! curl -s http://localhost:3000/api/health > /dev/null 2>&1; then echo "Next.js failed to start. Full logs:"; cat next.log; exit 1; fi
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - npm run test:api:ci
-  after_script:
-    - echo "=== Next.js Final Logs ==="
-    - cat next.log || echo "No logs found"
-    - if [ ! -z "$NEXT_PID" ]; then kill $NEXT_PID || true; fi
-  artifacts:
-    reports:
-      junit: api-test-results.xml
-    paths:
-      - api-test-results.xml
-    expire_in: 1 week
-    when: always
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:latest
   only:
     - main
-    - merge_requests
-    - develop
 
 deploy:production:
   stage: deploy
