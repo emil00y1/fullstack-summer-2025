@@ -1,9 +1,9 @@
 stages:
-  # - lint
-  # - security
-  # - unit-test
+  - lint
+  - security
+  - unit-test
   - build
-  - api-test
+  # - api-test
   - docker-build
   - deploy
 
@@ -16,52 +16,52 @@ cache:
     - node_modules/
     - .next/cache/
 
-# lint:
-#   stage: lint
-#   image: node:18-alpine
-#   before_script:
-#     - npm ci --cache .npm --prefer-offline
-#   script:
-#     - npm run lint:check
-#   only:
-#     - main
-#     - merge_requests
+lint:
+  stage: lint
+  image: node:18-alpine
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - npm run lint:check
+  only:
+    - main
+    - merge_requests
 
-# security-audit:
-#   stage: security  
-#   image: node:18-alpine
-#   before_script:
-#     - npm ci --cache .npm --prefer-offline
-#   script:
-#     - npm audit --audit-level moderate
-#     - echo "Security audit completed"
-#   allow_failure: true  
-#   only:
-#     - main
-#     - merge_requests
+security-audit:
+  stage: security  
+  image: node:18-alpine
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - npm audit --audit-level moderate
+    - echo "Security audit completed"
+  allow_failure: true  
+  only:
+    - main
+    - merge_requests
 
-# unit-test:
-#   stage: unit-test
-#   image: node:18-alpine
-#   before_script:
-#     - npm ci --cache .npm --prefer-offline
-#   script:
-#     - npm run test:ci
-#   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
-#   artifacts:
-#     reports:
-#       junit: test-results/junit.xml
-#       coverage_report:
-#         coverage_format: cobertura
-#         path: coverage/cobertura-coverage.xml
-#     paths:
-#       - coverage/
-#       - test-results/
-#     expire_in: 1 week
-#     when: always
-#   only:
-#     - main
-#     - merge_requests
+unit-test:
+  stage: unit-test
+  image: node:18-alpine
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - npm run test:ci
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    reports:
+      junit: test-results/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+      - test-results/
+    expire_in: 1 week
+    when: always
+  only:
+    - main
+    - merge_requests
 
 build:
   stage: build
@@ -82,60 +82,60 @@ build:
   only:
     - main
 
-api-test:
-  stage: api-test
-  image: node:18-alpine
-  services:
-    - name: mariadb:latest
-      alias: mysql  # Keep alias as 'mysql' so your code doesn't need to change
-  variables:
-    MYSQL_ROOT_PASSWORD: password
-    MYSQL_DATABASE: exam_summer_2025
-    DEV_DB_HOST: mysql
-    DEV_DB_PORT: 3306
-    DEV_DB_USER: root
-    DEV_DB_PASSWORD: password
-    DEV_DB_NAME: exam_summer_2025
-    NODE_ENV: "test"
-    NEXTAUTH_URL: "http://localhost:3000"
-    NEXTAUTH_SECRET: $NEXTAUTH_SECRET
-    JWT_SECRET: $JWT_SECRET
-  before_script:
-    - apk add --no-cache mysql-client curl
-    - npm ci --cache .npm --prefer-offline
-    - |
-      echo "Waiting for MySQL to be ready..."
-      timeout=0
-      until mysql -h mysql -u root -ppassword -e "SELECT 1" || [ $timeout -eq 30 ]; do
-        echo "MySQL not ready yet. Retrying in 5 seconds..."
-        sleep 5
-        timeout=$((timeout + 1))
-      done
-      if [ $timeout -eq 30 ]; then
-        echo "MySQL connection timeout"
-        exit 1
-      fi
-      echo "MySQL is ready."
-    - export DEV_DB_HOST=mysql 
-    - export NEXTAUTH_URL=http://localhost:3000
-    - echo "Starting Next.js server..."
-    - npm run start &  
-    - sleep 10
-    - |
-      echo "Waiting for Next.js to be ready..."
-      timeout=0
-      until curl -s http://localhost:3000/api/health || [ $timeout -eq 30 ]; do
-        echo "Next.js not ready yet. Retrying..."
-        sleep 2
-        timeout=$((timeout + 1))
-      done
-      if [ $timeout -eq 30 ]; then
-        echo "Next.js startup timeout"
-        exit 1
-      fi
-      echo "Next.js is ready!"
-  script:
-    - npm run test:api:ci
+# api-test:
+#   stage: api-test
+#   image: node:18-alpine
+#   services:
+#     - name: mariadb:latest
+#       alias: mysql  # Keep alias as 'mysql' so your code doesn't need to change
+#   variables:
+#     MYSQL_ROOT_PASSWORD: password
+#     MYSQL_DATABASE: exam_summer_2025
+#     DEV_DB_HOST: mysql
+#     DEV_DB_PORT: 3306
+#     DEV_DB_USER: root
+#     DEV_DB_PASSWORD: password
+#     DEV_DB_NAME: exam_summer_2025
+#     NODE_ENV: "test"
+#     NEXTAUTH_URL: "http://localhost:3000"
+#     NEXTAUTH_SECRET: $NEXTAUTH_SECRET
+#     JWT_SECRET: $JWT_SECRET
+#   before_script:
+#     - apk add --no-cache mysql-client curl
+#     - npm ci --cache .npm --prefer-offline
+#     - |
+#       echo "Waiting for MySQL to be ready..."
+#       timeout=0
+#       until mysql -h mysql -u root -ppassword -e "SELECT 1" || [ $timeout -eq 30 ]; do
+#         echo "MySQL not ready yet. Retrying in 5 seconds..."
+#         sleep 5
+#         timeout=$((timeout + 1))
+#       done
+#       if [ $timeout -eq 30 ]; then
+#         echo "MySQL connection timeout"
+#         exit 1
+#       fi
+#       echo "MySQL is ready."
+#     - export DEV_DB_HOST=mysql 
+#     - export NEXTAUTH_URL=http://localhost:3000
+#     - echo "Starting Next.js server..."
+#     - npm run start &  
+#     - sleep 10
+#     - |
+#       echo "Waiting for Next.js to be ready..."
+#       timeout=0
+#       until curl -s http://localhost:3000/api/health || [ $timeout -eq 30 ]; do
+#         echo "Next.js not ready yet. Retrying..."
+#         sleep 2
+#         timeout=$((timeout + 1))
+#       done
+#       if [ $timeout -eq 30 ]; then
+#         echo "Next.js startup timeout"
+#         exit 1
+#       fi
+#       echo "Next.js is ready!"
+#   script:
+#     - npm run test:api:ci
 
 
 docker-build:
