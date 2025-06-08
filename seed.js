@@ -65,10 +65,11 @@ async function seed() {
         bio TEXT,
         cover VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        deleted_at TIMESTAMP NULL,  -- Add this line
         is_verified BOOLEAN DEFAULT FALSE,
         verification_code VARCHAR(6) NULL,
         verification_code_expires_at TIMESTAMP NULL
-      )
+      );
     `);
 
     console.log("Creating posts table...");
