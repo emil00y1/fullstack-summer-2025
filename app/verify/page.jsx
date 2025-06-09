@@ -240,7 +240,7 @@ export default function VerifyPage() {
 
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full cursor-pointer"
                   disabled={isLoading || otp.join("").length !== 6}
                 >
                   {isLoading ? (

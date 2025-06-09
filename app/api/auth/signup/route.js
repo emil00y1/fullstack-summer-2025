@@ -1,33 +1,30 @@
-import { executeQuery } from "@/lib/db";
-import { hash } from "bcrypt";
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { v4 as uuidv4 } from "uuid";
-import { sendVerificationEmail } from "@/lib/emailService";
+import { executeQuery } from '@/lib/db';
+import { hash } from 'bcrypt';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
+import { sendVerificationEmail } from '@/lib/emailService';
 
 // Server-side validation schema (matches auth.js and client-side)
 const signupSchema = z.object({
   username: z
     .string()
-    .min(1, "Username is required")
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must be at most 20 characters")
+    .min(1, 'Username is required')
+    .min(3, 'Username must be at least 3 characters')
+    .max(20, 'Username must be at most 20 characters')
     .regex(
       /^[a-zA-Z0-9_-]+$/,
-      "Username can only contain letters, numbers, hyphens, and underscores"
+      'Username can only contain letters, numbers, hyphens, and underscores'
     ),
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
   password: z
     .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters")
+    .min(1, 'Password is required')
+    .min(6, 'Password must be at least 6 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(
-      /[A-Z]/,
-      "Password must contain at least one uppercase letter and special character (!*&?,.-_)"
-    )
-    .regex(
-      /[!*&?,.-_]/,
-      "Password must contain at least one uppercase letter and special character (!*&?,.-_)"
+      /[!*&?,._-]/,
+      'Password must contain at least one special character (!*&?,.-_)'
     ),
 });
 
@@ -37,64 +34,161 @@ function generateOTP() {
 
 export async function POST(request) {
   try {
-    // Parse request body
     const body = await request.json();
-
-    // Validate input data
     const result = signupSchema.safeParse(body);
+
     if (!result.success) {
       const errors = result.error.errors;
-      // Check for specific missing field errors
       for (const error of errors) {
         if (
-          error.message === "Username is required" ||
-          error.message === "Email is required" ||
-          error.message === "Password is required"
+          error.message === 'Username is required' ||
+          error.message === 'Email is required' ||
+          error.message === 'Password is required'
         ) {
           return NextResponse.json({ message: error.message }, { status: 400 });
         }
       }
-      // Return generic error for other validation failures
-      return NextResponse.json({ message: "Invalid input" }, { status: 400 });
+      return NextResponse.json({ message: 'Invalid input' }, { status: 400 });
     }
 
     const { username, email, password } = result.data;
-
-    // Generate UUID for user id
     const userId = uuidv4();
 
-    // Check if username already exists
+    // Check for existing username (including soft-deleted)
     const existingUserByUsername = await executeQuery(
-      "SELECT * FROM users WHERE username = ?",
+      'SELECT * FROM users WHERE username = ?',
       [username]
     );
+
     if (existingUserByUsername.length > 0) {
-      return NextResponse.json(
-        { message: "Username is already taken" },
-        { status: 409 }
-      );
+      const user = existingUserByUsername[0];
+
+      // If user is soft-deleted, we can reactivate
+      if (user.deleted_at) {
+        // Generate new verification code and hash password
+        const verificationCode = generateOTP();
+        const verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        const hashedPassword = await hash(password, 10);
+
+        // Update the soft-deleted user with new data
+        await executeQuery(
+          `UPDATE users SET 
+            email = ?, 
+            password = ?, 
+            deleted_at = NULL, 
+            is_verified = FALSE,
+            verification_code = ?,
+            verification_code_expires_at = ?,
+            created_at = ?
+          WHERE username = ?`,
+          [
+            email,
+            hashedPassword,
+            verificationCode,
+            verificationCodeExpiresAt,
+            new Date(),
+            username,
+          ]
+        );
+
+        // Send verification email
+        const emailSent = await sendVerificationEmail(
+          email,
+          username,
+          verificationCode
+        );
+
+        if (!emailSent) {
+          console.error('Failed to send verification email');
+        }
+
+        return NextResponse.json(
+          {
+            message:
+              'Account reactivated! Please check your email for verification code.',
+            email: email,
+          },
+          { status: 201 }
+        );
+      } else {
+        // User exists and is active
+        return NextResponse.json(
+          { message: 'Username is already taken' },
+          { status: 409 }
+        );
+      }
     }
 
-    // Check if email already exists
+    // Check for existing email (including soft-deleted)
     const existingUserByEmail = await executeQuery(
-      "SELECT * FROM users WHERE email = ?",
+      'SELECT * FROM users WHERE email = ?',
       [email]
     );
+
     if (existingUserByEmail.length > 0) {
-      return NextResponse.json(
-        { message: "Email is already registered" },
-        { status: 409 }
-      );
+      const user = existingUserByEmail[0];
+
+      // If user is soft-deleted, we can reactivate
+      if (user.deleted_at) {
+        // Generate new verification code and hash password
+        const verificationCode = generateOTP();
+        const verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        const hashedPassword = await hash(password, 10);
+
+        // Update the soft-deleted user with new data
+        await executeQuery(
+          `UPDATE users SET 
+            username = ?, 
+            password = ?, 
+            deleted_at = NULL, 
+            is_verified = FALSE,
+            verification_code = ?,
+            verification_code_expires_at = ?,
+            created_at = ?
+          WHERE email = ?`,
+          [
+            username,
+            hashedPassword,
+            verificationCode,
+            verificationCodeExpiresAt,
+            new Date(),
+            email,
+          ]
+        );
+
+        // Send verification email
+        const emailSent = await sendVerificationEmail(
+          email,
+          username,
+          verificationCode
+        );
+
+        if (!emailSent) {
+          console.error('Failed to send verification email');
+        }
+
+        return NextResponse.json(
+          {
+            message:
+              'Account reactivated! Please check your email for verification code.',
+            email: email,
+          },
+          { status: 201 }
+        );
+      } else {
+        // User exists and is active
+        return NextResponse.json(
+          { message: 'Email is already registered' },
+          { status: 409 }
+        );
+      }
     }
 
+    // No existing user found - create new user
     const verificationCode = generateOTP();
-
     const verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-    // Hash the password
     const hashedPassword = await hash(password, 10);
 
-    // Insert the user into the database
     await executeQuery(
       `INSERT INTO users (
         id, username, email, password, created_at, 
@@ -119,37 +213,35 @@ export async function POST(request) {
     );
 
     if (!emailSent) {
-      console.error("Failed to send verification email");
-      // Consider handling this case (perhaps delete the user and return an error)
+      console.error('Failed to send verification email');
     }
 
-    // Return success response
     return NextResponse.json(
       {
         message:
-          "Account created! Please check your email for verification code.",
-        email: email, // Return the email for the verification page
+          'Account created! Please check your email for verification code.',
+        email: email,
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error("Signup Error:", error);
-    if (error.code === "ER_DUP_ENTRY") {
-      if (error.message.includes("username")) {
+    console.error('Signup Error:', error);
+    if (error.code === 'ER_DUP_ENTRY') {
+      if (error.message.includes('username')) {
         return NextResponse.json(
-          { message: "Username is already taken" },
+          { message: 'Username is already taken' },
           { status: 409 }
         );
       }
-      if (error.message.includes("email")) {
+      if (error.message.includes('email')) {
         return NextResponse.json(
-          { message: "Email is already registered" },
+          { message: 'Email is already registered' },
           { status: 409 }
         );
       }
     }
     return NextResponse.json(
-      { message: "An error occurred during signup" },
+      { message: 'An error occurred during signup' },
       { status: 500 }
     );
   }

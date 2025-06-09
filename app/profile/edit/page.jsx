@@ -193,8 +193,6 @@ async function deleteProfile() {
 
     const userId = session.user.id;
 
-    // Soft delete all user-related data
-
     // 1. Delete comment likes (user's likes on others' comments)
     await executeQuery('DELETE FROM comment_likes WHERE user_id = ?', [userId]);
 
@@ -230,6 +228,15 @@ async function deleteProfile() {
       'DELETE FROM follows WHERE follower_id = ? OR following_id = ?',
       [userId, userId]
     );
+
+    await executeQuery('UPDATE users SET avatar = NULL WHERE id = ?', [
+      userId,
+    ]);
+
+    await executeQuery('UPDATE users SET bio = NULL WHERE id = ?', [userId]);
+
+    await executeQuery('UPDATE users SET cover = NULL WHERE id = ?', [userId]);
+
 
     // 8. Soft delete the user (mark as deleted)
     await executeQuery('UPDATE users SET deleted_at = NOW() WHERE id = ?', [
