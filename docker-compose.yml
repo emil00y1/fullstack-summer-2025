@@ -2,6 +2,9 @@ services:
   next-app:
     build:
       context: .
+      args:
+        NEXTAUTH_URL: ${NEXTAUTH_URL}
+        AUTH_SECRET: ${AUTH_SECRET}
     command: npm run dev
     ports:
       - "3000:3000"
