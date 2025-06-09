@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { executeQuery } from "@/lib/db";
 import { auth } from "@/auth";
@@ -14,6 +14,10 @@ export default async function UserProfilePage({ params }) {
   // Get current user session
   const session = await auth();
   const currentUserId = session?.user?.id || null;
+
+  if (currentUserId && session?.user?.username === username) {
+    redirect('/profile');
+  }
 
   try {
     // Fetch the user data
