@@ -97,7 +97,7 @@ build:
     - main
 
 # =============================================================================
-# API TEST STAGE
+# API TEST STAGE (FIXED VERSION)
 # =============================================================================
 
 api-test:
@@ -106,9 +106,12 @@ api-test:
   services:
     - name: mysql:8.0
       alias: mysql
+      command: ["--default-authentication-plugin=mysql_native_password", "--skip-host-cache", "--skip-name-resolve"]
   variables:
     MYSQL_ROOT_PASSWORD: "test_password"
     MYSQL_DATABASE: "exam_summer_2025_test"
+    MYSQL_USER: "test_user"
+    MYSQL_PASSWORD: "test_password"
     # App config for testing
     NODE_ENV: "test"
     DEV_DB_HOST: "mysql"
@@ -123,42 +126,80 @@ api-test:
   before_script:
     - apk add --no-cache mysql-client curl
     - npm ci --cache .npm --prefer-offline
-    # Wait for MySQL
+    # Wait for MySQL with better error handling
     - |
-      echo "Waiting for MySQL..."
+      echo "Waiting for MySQL to be ready..."
+      MYSQL_READY=0
+      for i in $(seq 1 60); do
+        echo "Attempt $i/60..."
+        if mysql -h mysql -u root -ptest_password --connect-timeout=10 -e "SELECT 1" >/dev/null 2>&1; then
+          echo "✅ MySQL is ready!"
+          MYSQL_READY=1
+          break
+        fi
+        if [ $i -eq 60 ]; then
+          echo "❌ MySQL connection timeout after 60 attempts"
+          echo "🔍 Checking MySQL service status..."
+          # Try to get more info about what's wrong
+          mysql -h mysql -u root -ptest_password -e "SELECT 1" || true
+          exit 1
+        fi
+        echo "MySQL not ready yet, waiting 3 seconds..."
+        sleep 3
+      done
+    # Setup test database
+    - |
+      echo "🔧 Setting up test database..."
+      mysql -h mysql -u root -ptest_password -e "CREATE DATABASE IF NOT EXISTS exam_summer_2025_test;" || exit 1
+      mysql -h mysql -u root -ptest_password -e "SHOW DATABASES;" || exit 1
+      echo "✅ Database created successfully"
+    # Run database seeding
+    - |
+      echo "🌱 Seeding test database..."
+      node seed.js || exit 1
+      echo "✅ Database seeded successfully"
+  script:
+    # Start app in background
+    - |
+      echo "🚀 Starting Next.js application..."
+      npm run start &
+      APP_PID=$!
+      echo "App started with PID: $APP_PID"
+    # Wait for app to be ready with better timeout
+    - |
+      echo "⏳ Waiting for Next.js to be ready..."
+      APP_READY=0
       for i in $(seq 1 30); do
-        if mysql -h mysql -u root -ptest_password -e "SELECT 1" >/dev/null 2>&1; then
-          echo "MySQL is ready!"
+        echo "Checking app status... ($i/30)"
+        if curl -s --connect-timeout 5 http://localhost:3000/api/health >/dev/null 2>&1; then
+          echo "✅ Next.js is ready!"
+          APP_READY=1
           break
         fi
         if [ $i -eq 30 ]; then
-          echo "MySQL timeout"
+          echo "❌ Next.js startup timeout"
+          echo "🔍 Checking if process is still running..."
+          ps aux | grep node || true
+          echo "🔍 Trying to curl with verbose output..."
+          curl -v http://localhost:3000/api/health || true
+          kill -9 $APP_PID 2>/dev/null || true
           exit 1
         fi
-        sleep 2
-      done
-    # Setup test database
-    - mysql -h mysql -u root -ptest_password -e "CREATE DATABASE IF NOT EXISTS exam_summer_2025_test;"
-    - node seed.js
-  script:
-    # Start app
-    - npm run start &
-    - sleep 10
-    # Wait for app to be ready
-    - |
-      for i in $(seq 1 15); do
-        if curl -s http://localhost:3000/api/health >/dev/null; then
-          echo "App is ready!"
-          break
-        fi
-        if [ $i -eq 15 ]; then
-          echo "App timeout"
-          exit 1
-        fi
-        sleep 2
+        sleep 3
       done
     # Run API tests
-    - npm run test:api:ci
+    - |
+      echo "🧪 Running API tests..."
+      npm run test:api:ci || {
+        echo "❌ API tests failed"
+        echo "🔍 App process status:"
+        ps aux | grep node || true
+        kill -9 $APP_PID 2>/dev/null || true
+        exit 1
+      }
+      echo "✅ API tests completed successfully"
+    # Cleanup
+    - kill -9 $APP_PID 2>/dev/null || true
   artifacts:
     reports:
       junit: api-test-results.xml
