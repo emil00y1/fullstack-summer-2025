@@ -20,7 +20,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const callbackUrl = searchParams.get("callbackUrl");
 
   // Get error from URL if present
   const urlError = searchParams.get("error");
@@ -45,7 +44,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid credentials");
       } else {
-        router.push(callbackUrl || "/");
+        window.location.href = "/";
       }
     } catch (error) {
       setError("An error occurred during login");

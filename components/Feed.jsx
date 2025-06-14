@@ -1,3 +1,4 @@
+// components/Feed.jsx - Fixed version with post deduplication
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import PostItem from "./PostItem";
@@ -40,7 +41,12 @@ export default function Feed({ isAdmin }) {
         setPosts(fetchedPosts);
         setOffset(limit);
       } else {
-        setPosts((prevPosts) => [...prevPosts, ...fetchedPosts]);
+        // ✅ FIX: Deduplicate posts to prevent duplicate keys
+        setPosts((prevPosts) => {
+          const existingIds = new Set(prevPosts.map(post => post.encryptedId));
+          const newPosts = fetchedPosts.filter(post => !existingIds.has(post.encryptedId));
+          return [...prevPosts, ...newPosts];
+        });
         setOffset(offset + limit);
       }
     } catch (error) {

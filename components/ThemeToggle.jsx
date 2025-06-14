@@ -13,7 +13,7 @@ export function ThemeToggle() {
   };
 
   return (
-    <div className="flex items-center justify-between w-full px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
+    <div className="flex items-center justify-between w-full gap-2 px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center gap-2">
         {isDark ? 
           <Moon className="h-4 w-4" /> : 

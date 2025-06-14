@@ -1,13 +1,17 @@
+// middleware.js - Fixed to allow landing page access
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
+  const { pathname } = req.nextUrl;
 
-  // Define public routes that don't require authentication
+  // ✅ FIX: Include "/" as a public route so unauthenticated users can see landing page
   const publicRoutes = ["/", "/login", "/signup", "/verify"];
+  
+  // ✅ FIX: Use pathname instead of req.url for more reliable matching
   const isPublicRoute = publicRoutes.some(
-    (route) => req.url.includes(route) || req.url.includes(route + "/")
+    (route) => pathname === route || pathname.startsWith(route + "/")
   );
 
   // Get the base URL from NEXTAUTH_URL environment variable
@@ -20,8 +24,10 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Optional: Redirect logged-in users away from auth pages
-  if (isLoggedIn && isPublicRoute) {
+  // ✅ FIX: Only redirect logged-in users away from auth pages (not from home)
+  // Home page "/" should be accessible to both logged-in and logged-out users
+  const authOnlyRoutes = ["/login", "/signup", "/verify"];
+  if (isLoggedIn && authOnlyRoutes.includes(pathname)) {
     const homeUrl = new URL("/", baseUrl);
     return NextResponse.redirect(homeUrl);
   }

@@ -13,6 +13,7 @@ import {
   Search, 
   ArrowRight
 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function LandingPage() {
   const [currentFeature, setCurrentFeature] = useState(0);
@@ -57,6 +58,7 @@ export default function LandingPage() {
           </div>
           
           <div className="flex items-center gap-3">
+            <div><ThemeToggle/></div>
             <Button variant="ghost" className="font-medium" asChild>
               <Link href="/login">Login</Link>
             </Button>
