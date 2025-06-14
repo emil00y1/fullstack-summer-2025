@@ -68,15 +68,9 @@ export default function LoginPage() {
         
         {/* Additional login-specific content */}
         <div className="text-center space-y-4">
-          <div className="relative">
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
-
           <div className="text-sm">
             Don't have an account?{" "}
-            <Link href="/signup" className="underline underline-offset-4 text-blue-600 hover:text-blue-500">
+            <Link href="/signup" className="underline underline-offset-4 text-blue-600 hover:text-blue-500 cursor-pointer">
               Sign up
             </Link>
           </div>

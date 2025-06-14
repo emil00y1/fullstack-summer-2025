@@ -37,8 +37,8 @@ export default async function RootLayout({ children }) {
           disableTransitionOnChange
         >
           <ThemeWrapper>
-            <div className="max-w-5xl flex w-full">
-              {/* Only show sidebar for authenticated users */}
+            <div className={`flex w-full ${isLoggedIn ? 'max-w-5xl' : ''}`}>
+            {/* Only show sidebar for authenticated users */}
               {isLoggedIn && (
                 <header className="transition-all duration-300 w-16 lg:w-64">
                   <SidebarProvider>
