@@ -253,7 +253,7 @@ export default function PostItem({ post, isAdmin }) {
               </span>
               {/* Show privacy badge for private posts */}
               {!isPublic && (isOwnPost || isAdmin) && (
-                <Badge variant="outline" className="ml-1 bg-gray-100">
+                <Badge variant="outline" className="ml-1 bg-gray-100 dark:bg-gray-800">
                   <Lock className="h-3 w-3 mr-1" /> Private
                 </Badge>
               )}
