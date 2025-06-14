@@ -1,4 +1,3 @@
-// components/Feed.jsx - Fixed version with post deduplication
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import PostItem from "./PostItem";
@@ -41,12 +40,7 @@ export default function Feed({ isAdmin }) {
         setPosts(fetchedPosts);
         setOffset(limit);
       } else {
-        // ✅ FIX: Deduplicate posts to prevent duplicate keys
-        setPosts((prevPosts) => {
-          const existingIds = new Set(prevPosts.map(post => post.encryptedId));
-          const newPosts = fetchedPosts.filter(post => !existingIds.has(post.encryptedId));
-          return [...prevPosts, ...newPosts];
-        });
+        setPosts((prevPosts) => [...prevPosts, ...fetchedPosts]);
         setOffset(offset + limit);
       }
     } catch (error) {
@@ -55,6 +49,11 @@ export default function Feed({ isAdmin }) {
       setIsLoading(false);
     }
   };
+
+  // Callback to add new post to the beginning of posts array
+  const addNewPost = useCallback((newPost) => {
+    setPosts((prevPosts) => [newPost, ...prevPosts]);
+  }, []);
 
   useEffect(() => {
     fetchPosts(true);
@@ -82,9 +81,9 @@ export default function Feed({ isAdmin }) {
   }, [posts, hasMore, isLoading]);
 
   return (
-    <div className="max-w-xl mx-auto p-4">
+    <div className="w-full max-w-xl mx-auto p-4">
       <SessionProvider>
-        <CreatePost />
+        <CreatePost onPostCreated={addNewPost} />
       </SessionProvider>
       <Separator className="my-2" />
 

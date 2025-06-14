@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export function CreatePost() {
+export function CreatePost({ onPostCreated }) {
   const { data: session, status } = useSession();
   const [post, setPost] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,16 +46,47 @@ export function CreatePost() {
         throw new Error(data.error || "Failed to create post");
       }
 
-      // Extract encryptedId from response
-      const { encryptedId } = data;
+      // Fetch the newly created post from API to get correct user data
+      try {
+        const postResponse = await fetch(`/api/posts?limit=10&offset=0`);
+        if (postResponse.ok) {
+          const posts = await postResponse.json();
+          const newPost = posts.find(p => p.encryptedId === data.encryptedId);
+          if (newPost && onPostCreated) {
+            onPostCreated(newPost);
+          }
+        }
+      } catch (fetchError) {
+        console.error('Error fetching new post:', fetchError);
+        // Fallback to optimistic update without avatar
+        const fallbackPost = {
+          encryptedId: data.encryptedId,
+          body: post,
+          createdAt: new Date().toISOString(),
+          likesCount: 0,
+          commentsCount: 0,
+          isPublic: true,
+          isLiked: false,
+          user: {
+            username: session.user.username,
+            avatar: null,
+            name: session.user.username,
+          },
+          comments: [],
+          likes: [],
+        };
+        if (onPostCreated) {
+          onPostCreated(fallbackPost);
+        }
+      }
 
-      // Show success toast with option to view post
+      // Show success toast
       toast.success("Post created", {
         description: (
           <span>
             Your post has been published!{" "}
             <button
-              onClick={() => router.push(`/posts/${encryptedId}`)}
+              onClick={() => router.push(`/posts/${data.encryptedId}`)}
               className="text-blue-500 underline hover:text-blue-700"
             >
               View post
@@ -67,8 +98,7 @@ export function CreatePost() {
 
       // Clear the form
       setPost("");
-      // Optionally navigate to the new post (uncomment if desired)
-      // router.push(`/posts/${encryptedId}`);
+      
     } catch (error) {
       console.error("Error creating post:", error);
       toast.error("Failed to create post", {
