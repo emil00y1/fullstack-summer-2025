@@ -150,7 +150,7 @@ export default async function PostPage({ params }) {
         </div>
         <div className="py-2 px-4 border-b" id="comment-section">
           {session ? (
-            <CommentForm encryptedPostId={encryptedPostId} session={session} />
+            <CommentForm encryptedPostId={encryptedPostId} />
           ) : (
             <div className="py-4 text-center">
               <Link href="/login" className="text-blue-500">

@@ -6,6 +6,7 @@ import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileInfo from "@/components/profile/ProfileInfo";
 import ClientTabs from "@/components/profile/ClientTabs";
 import { encryptId } from "@/utils/cryptoUtils";
+import { fetchUserReposts } from "@/lib/postUtils";
 
 export default async function UserProfilePage({ params }) {
   const username = params?.username || "";
@@ -16,7 +17,7 @@ export default async function UserProfilePage({ params }) {
   const currentUserId = session?.user?.id || null;
 
   if (currentUserId && session?.user?.username === username) {
-    redirect('/profile');
+    redirect("/profile");
   }
 
   try {
@@ -57,7 +58,8 @@ export default async function UserProfilePage({ params }) {
         u.email,
         u.avatar,
         (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as like_count,
-        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count,
+        (SELECT COUNT(*) FROM reposts WHERE post_id = p.id) as repost_count
       FROM posts p
       JOIN users u ON p.user_id = u.id
       WHERE p.user_id = ? ${
@@ -65,6 +67,36 @@ export default async function UserProfilePage({ params }) {
       }
       ORDER BY p.created_at DESC`,
       [userData.id]
+    );
+
+    // Fetch user's reposts (only public posts)
+    const userReposts = await fetchUserReposts(username, currentUserId);
+
+    // Format original posts
+    const formattedPosts = posts.map((post) => ({
+      id: post.id,
+      encryptedId: encryptId(post.id),
+      body: post.content,
+      createdAt: post.created_at,
+      userId: post.user_id,
+      likesCount: post.like_count,
+      commentsCount: post.comment_count,
+      repostsCount: post.repost_count || 0,
+      isPublic: post.is_public === 1,
+      isLiked: false,
+      user: {
+        id: post.user_id,
+        username: post.username,
+        email: post.email,
+        avatar: post.avatar,
+      },
+      comments: [],
+      isRepost: false,
+    }));
+
+    // Combine posts and reposts, sort by creation date
+    const allPosts = [...formattedPosts, ...userReposts].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
 
     const comments = await executeQuery(
@@ -94,10 +126,14 @@ export default async function UserProfilePage({ params }) {
     // Get current user's likes for these posts (if authenticated)
     let userLikes = [];
     if (currentUserId) {
-      userLikes = await executeQuery(
-        `SELECT post_id FROM likes WHERE user_id = ?`,
-        [currentUserId]
-      );
+      const postIds = allPosts.map((post) => post.id).filter(Boolean);
+      if (postIds.length > 0) {
+        const placeholders = postIds.map(() => "?").join(",");
+        userLikes = await executeQuery(
+          `SELECT post_id FROM likes WHERE user_id = ? AND post_id IN (${placeholders})`,
+          [currentUserId, ...postIds]
+        );
+      }
     }
     const likedPostIds = new Set(userLikes.map((like) => like.post_id));
 
@@ -112,52 +148,20 @@ export default async function UserProfilePage({ params }) {
       userCommentLikes.map((like) => like.comment_id)
     );
 
-    // Create a mapping of all IDs to their encrypted values
-    const encryptedIds = {};
-
-    // Encrypt post IDs
-    posts.forEach((post) => {
-      encryptedIds[`post_${post.id}`] = encryptId(post.id);
-    });
-
-    // Encrypt comment IDs and ensure all post IDs referenced by comments are encrypted
-    comments.forEach((comment) => {
-      encryptedIds[`comment_${comment.id}`] = encryptId(comment.id);
-      // Make sure we encrypt post IDs referenced in comments if they aren't already encrypted
-      if (!encryptedIds[`post_${comment.post_id}`]) {
-        encryptedIds[`post_${comment.post_id}`] = encryptId(comment.post_id);
+    // Update like status for posts
+    allPosts.forEach((post) => {
+      if (post.id) {
+        post.isLiked = likedPostIds.has(post.id);
       }
-    });
-
-    // Format posts for the client component
-    const formattedPosts = posts.map((post) => {
-      return {
-        id: post.id, // Keep the original ID (server-side only)
-        encryptedId: encryptedIds[`post_${post.id}`], // Use pre-encrypted ID
-        body: post.content,
-        createdAt: post.created_at,
-        userId: post.user_id,
-        likesCount: post.like_count,
-        commentsCount: post.comment_count,
-        isPublic: post.is_public === 1,
-        isLiked: likedPostIds.has(post.id),
-        user: {
-          id: post.user_id,
-          username: post.username,
-          email: post.email,
-          avatar: post.avatar,
-        },
-        comments: [], // Will populate later
-      };
     });
 
     // Format comments with encrypted IDs
     const formattedComments = comments.map((comment) => {
       return {
-        id: comment.id, // Keep the original ID (server-side only)
-        encryptedId: encryptedIds[`comment_${comment.id}`], // Use pre-encrypted ID
-        postId: comment.post_id, // Keep the original post ID (server-side only)
-        postEncryptedId: encryptedIds[`post_${comment.post_id}`], // Use pre-encrypted post ID
+        id: comment.id,
+        encryptedId: encryptId(comment.id),
+        postId: comment.post_id,
+        postEncryptedId: encryptId(comment.post_id),
         body: comment.content,
         createdAt: comment.created_at,
         isLiked: likedCommentIds.has(comment.id),
@@ -169,8 +173,8 @@ export default async function UserProfilePage({ params }) {
           avatar: comment.avatar,
         },
         post: {
-          id: comment.post_id, // Keep the original ID (server-side only)
-          encryptedId: encryptedIds[`post_${comment.post_id}`], // Use pre-encrypted post ID
+          id: comment.post_id,
+          encryptedId: encryptId(comment.post_id),
           body: comment.post_content,
           user: {
             username: comment.post_author,
@@ -189,7 +193,7 @@ export default async function UserProfilePage({ params }) {
       isFollowing = isFollowingResult.length > 0;
     }
 
-    // For each post, fetch the top 3 most recent comments
+    // For each original post, fetch the top 3 most recent comments
     for (const post of formattedPosts) {
       const postComments = await executeQuery(
         `SELECT 
@@ -206,7 +210,7 @@ export default async function UserProfilePage({ params }) {
          WHERE c.post_id = ?
          ORDER BY c.created_at DESC
          LIMIT 3`,
-        [post.id] // Use the original ID for database queries
+        [post.id]
       );
 
       // Get likes for these comments if current user is authenticated
@@ -214,8 +218,10 @@ export default async function UserProfilePage({ params }) {
       if (currentUserId && postComments.length > 0) {
         const commentIds = postComments.map((comment) => comment.id);
         const commentLikes = await executeQuery(
-          `SELECT comment_id FROM comment_likes WHERE user_id = ? AND comment_id IN (?)`,
-          [currentUserId, commentIds]
+          `SELECT comment_id FROM comment_likes WHERE user_id = ? AND comment_id IN (${commentIds
+            .map(() => "?")
+            .join(",")})`,
+          [currentUserId, ...commentIds]
         );
 
         commentLikes.forEach((like) => {
@@ -225,11 +231,10 @@ export default async function UserProfilePage({ params }) {
 
       // Format and add the comments to the post
       post.comments = postComments.map((comment) => ({
-        id: comment.id, // Keep the original ID (server-side only)
-        encryptedId:
-          encryptedIds[`comment_${comment.id}`] || encryptId(comment.id), // Use pre-encrypted ID if available
-        postId: post.id, // Keep the original post ID (server-side only)
-        postEncryptedId: post.encryptedId, // Use the post's encrypted ID
+        id: comment.id,
+        encryptedId: encryptId(comment.id),
+        postId: post.id,
+        postEncryptedId: post.encryptedId,
         body: comment.content,
         createdAt: comment.created_at,
         isLiked: commentLikedMap.has(comment.id),
@@ -247,7 +252,7 @@ export default async function UserProfilePage({ params }) {
       <div>
         <ProfileHeader
           username={userData.username}
-          postsAmount={posts.length}
+          postsAmount={allPosts.length}
         />
         <ProfileInfo
           userData={userData}
@@ -255,7 +260,7 @@ export default async function UserProfilePage({ params }) {
           isFollowing={isFollowing}
         />
         <ClientTabs
-          posts={formattedPosts}
+          posts={allPosts}
           comments={formattedComments}
           isAdmin={isAdmin}
         />

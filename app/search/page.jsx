@@ -89,8 +89,8 @@ export default function SearchPage() {
                   {/* Users preview */}
                   {results.users.length > 0 && (
                     <div className="border-b">
-                      <div className="p-3 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
-                        <h3 className="font-medium">People</h3>
+                      <div className="p-3 flex justify-between items-center">
+                        <h3 className="text-lg">People</h3>
                         {results.users.length > 3 && (
                           <button
                             onClick={() => setActiveTab("people")}
@@ -101,7 +101,7 @@ export default function SearchPage() {
                         )}
                       </div>
                       {results.users.slice(0, 3).map((user) => (
-                        <UserItem key={user.id} user={user} />
+                        <UserItem key={user.username} user={user} />
                       ))}
                     </div>
                   )}
@@ -141,7 +141,7 @@ export default function SearchPage() {
               ) : (
                 <div className="divide-y">
                   {results.users.map((user) => (
-                    <UserItem key={user.id} user={user} />
+                    <UserItem key={user.username} user={user} />
                   ))}
                 </div>
               )}

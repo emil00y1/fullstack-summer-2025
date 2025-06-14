@@ -48,7 +48,7 @@ async function seed() {
     await connection.execute("DROP TABLE IF EXISTS comments");
     await connection.execute("DROP TABLE IF EXISTS likes");
     await connection.execute("DROP TABLE IF EXISTS follows");
-    await connection.execute("DROP TABLE IF EXISTS comments");
+    await connection.execute("DROP TABLE IF EXISTS reposts");
     await connection.execute("DROP TABLE IF EXISTS posts");
     await connection.execute("DROP TABLE IF EXISTS user_roles");
     await connection.execute("DROP TABLE IF EXISTS roles");
@@ -154,6 +154,19 @@ async function seed() {
         FOREIGN KEY (user_id) REFERENCES users(id),
         FOREIGN KEY (role_id) REFERENCES roles(id)
       )
+    `);
+
+    console.log("Creating reposts table...");
+    await connection.execute(`
+       CREATE TABLE reposts (
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        user_id CHAR(36) NOT NULL,
+        post_id CHAR(36) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (post_id) REFERENCES posts(id),
+        UNIQUE (user_id, post_id)
+      );
     `);
 
     console.log("Creating indexes for improved performance...");
@@ -409,6 +422,34 @@ async function seed() {
           await connection.execute(
             "INSERT INTO follows (id, follower_id, following_id) VALUES (?, ?, ?)",
             [uuidv4(), followerId, followingId]
+          );
+        }
+      }
+    }
+
+    console.log("Inserting sample reposts...");
+    const addedReposts = new Set();
+    for (let i = 0; i < 30; i++) {
+      const userIndex = Math.floor(Math.random() * users.length);
+      const postIndex = Math.floor(Math.random() * postIds.length);
+
+      const userId = users[userIndex].id;
+      const postId = postIds[postIndex];
+
+      // Get the original post author to prevent self-reposts
+      const postAuthor = await connection.execute(
+        "SELECT user_id FROM posts WHERE id = ?",
+        [postId]
+      );
+
+      // Don't allow users to repost their own posts
+      if (postAuthor[0] && postAuthor[0][0].user_id !== userId) {
+        const repostKey = `${userId}-${postId}`;
+        if (!addedReposts.has(repostKey)) {
+          addedReposts.add(repostKey);
+          await connection.execute(
+            "INSERT INTO reposts (id, user_id, post_id) VALUES (?, ?, ?)",
+            [uuidv4(), userId, postId]
           );
         }
       }

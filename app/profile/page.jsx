@@ -5,6 +5,7 @@ import { executeQuery } from "@/lib/db";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileInfo from "@/components/profile/ProfileInfo";
 import { encryptId } from "@/utils/cryptoUtils";
+import { fetchUserReposts } from "@/lib/postUtils";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -15,17 +16,19 @@ export default async function ProfilePage() {
 
   const userId = session.user.id;
 
+  // Fetch user's original posts
   const posts = await executeQuery(
     `SELECT 
       p.id, 
       p.content, 
-        p.created_at, 
+      p.created_at, 
       p.is_public,
       u.username,
       u.email,
       u.avatar,
       (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as like_count,
-      (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
+      (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count,
+      (SELECT COUNT(*) FROM reposts WHERE post_id = p.id) as repost_count
     FROM posts p
     JOIN users u ON p.user_id = u.id
     WHERE p.user_id = ?
@@ -39,6 +42,7 @@ export default async function ProfilePage() {
     createdAt: post.created_at,
     likesCount: post.like_count,
     commentsCount: post.comment_count,
+    repostsCount: post.repost_count || 0,
     isPublic: post.is_public === 1,
     user: {
       username: post.username,
@@ -47,7 +51,16 @@ export default async function ProfilePage() {
     },
     comments: [],
     likes: [],
+    isRepost: false,
   }));
+
+  // Fetch user's reposts
+  const userReposts = await fetchUserReposts(session.user.username, userId);
+
+  // Combine posts and reposts, sort by creation date
+  const allPosts = [...formattedPosts, ...userReposts].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
 
   const comments = await executeQuery(
     `SELECT 
@@ -110,12 +123,12 @@ export default async function ProfilePage() {
     <div>
       <ProfileHeader
         username={userData.username}
-        postsAmount={formattedPosts.length}
+        postsAmount={allPosts.length}
       />
 
       <ProfileInfo userData={userData} isOwnAccount={true} />
 
-      <ClientTabs posts={formattedPosts} comments={formattedComments} />
+      <ClientTabs posts={allPosts} comments={formattedComments} />
     </div>
   );
 }

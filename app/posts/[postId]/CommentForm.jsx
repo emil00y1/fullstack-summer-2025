@@ -79,7 +79,7 @@ export default function CommentForm({ encryptedPostId }) {
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="Post your reply"
-          className="resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-2 min-h-[80px]"
+          className="resize-none mt-4 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-2 min-h-[80px]"
         />
         <div className="flex justify-end mt-2">
           <Button

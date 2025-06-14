@@ -41,16 +41,30 @@ export default function PostItem({ post, isAdmin }) {
   const router = useRouter();
 
   // Initialize state
-  const [isReposted, setIsReposted] = useState(false);
-  const [repostCount, setRepostCount] = useState(post.repostCount || 0);
+  const [isReposted, setIsReposted] = useState(post.isReposted || false);
+  const [repostCount, setRepostCount] = useState(post.repostsCount || 0);
   const [isPublic, setIsPublic] = useState(
     post.isPublic !== undefined ? post.isPublic : true
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isReposting, setIsReposting] = useState(false);
 
-  // Update isLiked state is now handled by the LikeButton component
-  const createdAt = post.createdAt ? formatTimeAgo(post.createdAt) : "recently";
+  // Handle timestamps correctly for reposts vs original posts
+  const originalCreatedAt = post.originalCreatedAt
+    ? formatTimeAgo(post.originalCreatedAt)
+    : post.createdAt
+    ? formatTimeAgo(post.createdAt)
+    : "recently";
+  const repostedAt = post.repostedAt ? formatTimeAgo(post.repostedAt) : null;
+
+  // For reposts, show original post time in main content, repost time in indicator
+  const displayTime = post.isRepost
+    ? originalCreatedAt
+    : post.createdAt
+    ? formatTimeAgo(post.createdAt)
+    : "recently";
+
   const isOwnPost = session?.user?.username === post.user?.username;
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -62,8 +76,27 @@ export default function PostItem({ post, isAdmin }) {
       return;
     }
 
-    setIsReposted(!isReposted);
-    setRepostCount((prev) => (isReposted ? prev - 1 : prev + 1));
+    setIsReposting(true);
+
+    try {
+      const method = isReposted ? "DELETE" : "POST";
+      const response = await fetch(`/api/posts/${post.encryptedId}/repost`, {
+        method,
+      });
+
+      if (response.ok) {
+        setIsReposted(!isReposted);
+        setRepostCount((prev) => (isReposted ? prev - 1 : prev + 1));
+      } else {
+        const error = await response.json();
+        console.error("Repost error:", error);
+        // You could show a toast notification here
+      }
+    } catch (error) {
+      console.error("Repost error:", error);
+    } finally {
+      setIsReposting(false);
+    }
   };
 
   const handleDelete = async (e) => {
@@ -137,8 +170,30 @@ export default function PostItem({ post, isAdmin }) {
 
   return (
     <div className="px-1 py-2 md:p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors relative">
+      {/* Repost indicator */}
+      {post.isRepost && post.repostedBy && (
+        <div className="mb-2 flex items-center gap-1 text-xs text-gray-500">
+          <Repeat size={12} />
+          <span>
+            <Link
+              href={`/user/${post.repostedBy}`}
+              className="font-medium text-gray-600 hover:text-blue-500 hover:underline"
+            >
+              {post.repostedBy}
+            </Link>{" "}
+            reposted
+          </span>
+          {repostedAt && (
+            <>
+              <span>·</span>
+              <span>{repostedAt}</span>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Top right dropdown for post owner */}
-      {(isOwnPost || isAdmin) && (
+      {(isOwnPost || isAdmin) && !post.isRepost && (
         <div className="absolute top-2 right-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -249,11 +304,14 @@ export default function PostItem({ post, isAdmin }) {
               </span>
               <span className="text-gray-500">·</span>
               <span className="text-gray-500 text-xs md:text-sm">
-                {createdAt}
+                {displayTime}
               </span>
               {/* Show privacy badge for private posts */}
               {!isPublic && (isOwnPost || isAdmin) && (
-                <Badge variant="outline" className="ml-1 bg-gray-100 dark:bg-gray-800">
+                <Badge
+                  variant="outline"
+                  className="ml-1 bg-gray-100 dark:bg-gray-800"
+                >
                   <Lock className="h-3 w-3 mr-1" /> Private
                 </Badge>
               )}
@@ -293,10 +351,16 @@ export default function PostItem({ post, isAdmin }) {
                   isReposted
                     ? "text-green-500"
                     : "text-gray-500 hover:text-green-500"
-                }`}
+                } ${isReposting ? "opacity-50" : ""}`}
                 size="sm"
+                disabled={isReposting || isOwnPost}
+                title={isOwnPost ? "You cannot repost your own post" : ""}
               >
-                <Repeat className="h-4 w-4 mr-1" />
+                {isReposting ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Repeat className="h-4 w-4 mr-1" />
+                )}
                 <span>{repostCount}</span>
               </Button>
               <LikeButton
