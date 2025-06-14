@@ -54,7 +54,7 @@ export default function LandingPage() {
       <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center">
-            <Logo height={32} width={32} className="text-foreground" />
+            <Logo height={32} width={32} className="fill-primary" />
           </div>
           
           <div className="flex items-center gap-3">
@@ -187,7 +187,7 @@ export default function LandingPage() {
       <footer className="px-6 py-8 border-t bg-background">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">
-            <Logo height={24} width={24} className="text-foreground" />
+            <Logo height={24} width={24} className="fill-primary" />
           </div>
           
           <div className="text-sm text-muted-foreground">
