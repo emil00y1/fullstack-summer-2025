@@ -35,6 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import HashtagText from "./HashtagText";
 
 export default function PostItem({ post, isAdmin }) {
   const { data: session } = useSession();
@@ -320,9 +321,7 @@ export default function PostItem({ post, isAdmin }) {
 
           <Link href={`/posts/${post.encryptedId}`} className="block">
             <div className="mt-2 md:mt-1">
-              <p className="whitespace-pre-line break-all break-words overflow-hidden text-ellipsis line-clamp-5">
-                {post.body}
-              </p>
+              <HashtagText text={post.body} className="whitespace-pre-line" />
               {post.image && (
                 <div className="mt-3 rounded-xl overflow-hidden">
                   <img

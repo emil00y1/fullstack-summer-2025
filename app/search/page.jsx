@@ -90,7 +90,7 @@ export default function SearchPage() {
                   {results.users.length > 0 && (
                     <div className="border-b">
                       <div className="p-3 flex justify-between items-center">
-                        <h3 className="text-lg">People</h3>
+                        <h3 className="text-lg font-semibold">People</h3>
                         {results.users.length > 3 && (
                           <button
                             onClick={() => setActiveTab("people")}

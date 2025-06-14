@@ -1,6 +1,6 @@
 const mysql = require("mysql2/promise");
 const bcrypt = require("bcrypt");
-const { v4: uuidv4 } = require("uuid"); // Added for UUID4 generation
+const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
 
 async function seed() {
@@ -44,6 +44,8 @@ async function seed() {
 
   try {
     console.log("Dropping existing tables if they exist...");
+    await connection.execute("DROP TABLE IF EXISTS post_hashtags");
+    await connection.execute("DROP TABLE IF EXISTS hashtags");
     await connection.execute("DROP TABLE IF EXISTS comment_likes");
     await connection.execute("DROP TABLE IF EXISTS comments");
     await connection.execute("DROP TABLE IF EXISTS likes");
@@ -65,7 +67,7 @@ async function seed() {
         bio TEXT,
         cover VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        deleted_at TIMESTAMP NULL,  -- Add this line
+        deleted_at TIMESTAMP NULL,
         is_verified BOOLEAN DEFAULT FALSE,
         verification_code VARCHAR(6) NULL,
         verification_code_expires_at TIMESTAMP NULL
@@ -81,6 +83,41 @@ async function seed() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_public BOOLEAN DEFAULT TRUE,
         FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    console.log("Creating hashtags table...");
+    await connection.execute(`
+      CREATE TABLE hashtags (
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_hashtag_name (name)
+      )
+    `);
+
+    console.log("Creating post_hashtags junction table...");
+    await connection.execute(`
+      CREATE TABLE post_hashtags (
+        post_id CHAR(36) NOT NULL,
+        hashtag_id CHAR(36) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (post_id, hashtag_id),
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (hashtag_id) REFERENCES hashtags(id) ON DELETE CASCADE
+      )
+    `);
+
+    console.log("Creating reposts table...");
+    await connection.execute(`
+      CREATE TABLE reposts (
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        user_id CHAR(36) NOT NULL,
+        post_id CHAR(36) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (post_id) REFERENCES posts(id),
+        UNIQUE (user_id, post_id)
       )
     `);
 
@@ -112,16 +149,16 @@ async function seed() {
 
     console.log("Creating comment_likes table...");
     await connection.execute(`
-  CREATE TABLE comment_likes (
-    id CHAR(36) NOT NULL PRIMARY KEY,
-    comment_id CHAR(36) NOT NULL,
-    user_id CHAR(36) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (comment_id) REFERENCES comments(id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    UNIQUE (comment_id, user_id)
-  )
-`);
+      CREATE TABLE comment_likes (
+        id CHAR(36) NOT NULL PRIMARY KEY,
+        comment_id CHAR(36) NOT NULL,
+        user_id CHAR(36) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (comment_id) REFERENCES comments(id),
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        UNIQUE (comment_id, user_id)
+      )
+    `);
 
     console.log("Creating follows table...");
     await connection.execute(`
@@ -156,19 +193,6 @@ async function seed() {
       )
     `);
 
-    console.log("Creating reposts table...");
-    await connection.execute(`
-       CREATE TABLE reposts (
-        id CHAR(36) NOT NULL PRIMARY KEY,
-        user_id CHAR(36) NOT NULL,
-        post_id CHAR(36) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (post_id) REFERENCES posts(id),
-        UNIQUE (user_id, post_id)
-      );
-    `);
-
     console.log("Creating indexes for improved performance...");
     await connection.execute(
       "CREATE INDEX idx_posts_created_at ON posts(created_at)"
@@ -181,6 +205,9 @@ async function seed() {
     );
     await connection.execute(
       "CREATE INDEX idx_comments_post_id ON comments(post_id)"
+    );
+    await connection.execute(
+      "CREATE INDEX idx_post_hashtags_hashtag_id ON post_hashtags(hashtag_id)"
     );
 
     console.log("Inserting default roles...");
@@ -323,7 +350,6 @@ async function seed() {
     );
 
     console.log("Assigning roles to users...");
-    // Assign user role to all users (including admin)
     for (const user of users) {
       await connection.execute(
         "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)",
@@ -331,77 +357,180 @@ async function seed() {
       );
     }
 
-    // Assign admin role to admin user only
     await connection.execute(
       "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)",
       [adminId, adminRoleId]
     );
 
-    console.log("Inserting sample posts...");
-    const sampleContents = [
-      "Just had an amazing cup of coffee!",
-      "Working on a new project today.",
-      "Can't wait for the weekend!",
-      "Thinking about learning a new programming language.",
-      "Just finished an interesting book about web development.",
-      "Having a great day at the beach.",
-      "Trying out a new recipe for dinner tonight.",
-      "Missing the good old days of simple web development.",
-      "Just adopted a new puppy!",
-      "Excited about the upcoming tech conference.",
+    console.log("Creating sample hashtags...");
+    const sampleHashtags = [
+      "javascript",
+      "react",
+      "nextjs",
+      "webdev",
+      "coding",
+      "programming",
+      "tech",
+      "ai",
+      "machinelearning",
+      "typescript",
+      "nodejs",
+      "frontend",
+      "backend",
+      "fullstack",
+      "design",
+      "ui",
+      "ux",
+      "css",
+      "html",
+      "productivity",
+      "motivation",
+      "learning",
+      "tutorial",
+      "tips",
+      "career",
+      "startup",
+      "entrepreneur",
+      "business",
+      "innovation",
     ];
 
-    const postIds = [];
+    const hashtagIds = {};
+    for (const tagName of sampleHashtags) {
+      const hashtagId = uuidv4();
+      await connection.execute(
+        "INSERT INTO hashtags (id, name) VALUES (?, ?)",
+        [hashtagId, tagName]
+      );
+      hashtagIds[tagName] = hashtagId;
+    }
+
+    console.log("Inserting sample posts with hashtags...");
+    const sampleContents = [
+      "Just finished building an amazing #react component with #typescript! #webdev #coding",
+      "Working on a new #nextjs project today. The developer experience is incredible! #javascript #frontend",
+      "Can't wait for the weekend to work on my #programming side project! #coding #motivation",
+      "Learning #machinelearning fundamentals. The math is challenging but rewarding! #ai #learning",
+      "Just deployed my first #fullstack application using #nodejs and #react. #webdev #coding",
+      "Amazing #ui design inspiration from Dribbble today. Time to implement! #design #frontend #css",
+      "Reading about #typescript best practices. Types make everything better! #programming #webdev",
+      "Coffee ☕ + #coding = perfect morning. Working on #javascript algorithms today.",
+      "New #tutorial on #css grid layouts is live! Check it out. #webdev #frontend #design",
+      "Excited about the new #react features in the latest release! #javascript #frontend #programming",
+      "Building a #startup is hard but rewarding. #entrepreneur #business #motivation #innovation",
+      "Great #productivity tips for developers: use the Pomodoro technique! #coding #tips #career",
+      "Just discovered this amazing #nodejs library. Open source is incredible! #backend #programming",
+      "Working late on this #webdev project but making great progress! #coding #programming #motivation",
+      "The future of #ai is here. Excited to see what we build next! #machinelearning #tech #innovation",
+    ];
+
+    // Store post IDs separately to avoid confusion
+    const allPostIds = [];
+    const postData = [];
+
     for (let i = 0; i < 100; i++) {
       const postId = uuidv4();
       const userIndex = Math.floor(Math.random() * users.length);
       const userId = users[userIndex].id;
       const contentIndex = i % sampleContents.length;
       const isPublic = Math.random() > 0.1 ? 1 : 0;
-      const content = sampleContents[contentIndex];
+      let content = sampleContents[contentIndex];
+
+      // Add some random variation
+      if (Math.random() > 0.7) {
+        content += ` #${
+          sampleHashtags[Math.floor(Math.random() * sampleHashtags.length)]
+        }`;
+      }
+
       await connection.execute(
         "INSERT INTO posts (id, user_id, content, is_public) VALUES (?, ?, ?, ?)",
         [postId, userId, content, isPublic]
       );
-      postIds.push(postId);
+
+      // Store just the IDs for likes/comments
+      allPostIds.push(postId);
+      // Store full data for hashtag processing
+      postData.push({ id: postId, content });
+    }
+
+    console.log("Linking posts with hashtags...");
+    for (const post of postData) {
+      // Extract hashtags from content
+      const hashtagMatches = post.content.match(/#\w+/g) || [];
+
+      for (const hashtagMatch of hashtagMatches) {
+        const tagName = hashtagMatch.substring(1).toLowerCase();
+        if (hashtagIds[tagName]) {
+          try {
+            await connection.execute(
+              "INSERT INTO post_hashtags (post_id, hashtag_id) VALUES (?, ?)",
+              [post.id, hashtagIds[tagName]]
+            );
+          } catch (error) {
+            // Ignore duplicate key errors
+            if (!error.message.includes("Duplicate entry")) {
+              console.error("Error inserting post hashtag:", error);
+            }
+          }
+        }
+      }
     }
 
     console.log("Inserting sample likes...");
     const addedLikes = new Set();
     for (let i = 0; i < 500; i++) {
-      const postId = postIds[Math.floor(Math.random() * postIds.length)];
+      const postId = allPostIds[Math.floor(Math.random() * allPostIds.length)];
       const userIndex = Math.floor(Math.random() * users.length);
       const userId = users[userIndex].id;
       const likeKey = `${postId}-${userId}`;
+
       if (!addedLikes.has(likeKey)) {
         addedLikes.add(likeKey);
-        await connection.execute(
-          "INSERT INTO likes (id, post_id, user_id) VALUES (?, ?, ?)",
-          [uuidv4(), postId, userId]
-        );
+
+        // Debug: Verify the length of IDs before insertion
+        if (postId.length !== 36 || userId.length !== 36) {
+          console.error(
+            `Invalid ID length - postId: ${postId.length}, userId: ${userId.length}`
+          );
+          continue;
+        }
+
+        try {
+          await connection.execute(
+            "INSERT INTO likes (id, post_id, user_id) VALUES (?, ?, ?)",
+            [uuidv4(), postId, userId]
+          );
+        } catch (error) {
+          console.error(
+            `Error inserting like for postId: ${postId} (length: ${postId.length}), userId: ${userId} (length: ${userId.length})`
+          );
+          console.error(error.message);
+        }
       }
     }
 
     console.log("Inserting sample comments...");
     const sampleComments = [
-      "Great post!",
+      "Great post! #coding",
       "I totally agree with you.",
-      "Interesting perspective.",
-      "Thanks for sharing!",
-      "This made my day.",
-      "I've been thinking the same thing.",
-      "Have you considered trying this approach?",
-      "Keep up the good work!",
-      "Can you explain more about this?",
-      "Looking forward to more posts like this.",
+      "Interesting perspective on #webdev.",
+      "Thanks for sharing! #learning",
+      "This made my day. #motivation",
+      "I've been thinking the same thing about #react.",
+      "Have you considered trying #typescript for this?",
+      "Keep up the good work! #programming",
+      "Can you explain more about this #ai concept?",
+      "Looking forward to more posts like this. #tech",
     ];
 
     for (let i = 0; i < 200; i++) {
-      const postId = postIds[Math.floor(Math.random() * postIds.length)];
+      const postId = allPostIds[Math.floor(Math.random() * allPostIds.length)];
       const userIndex = Math.floor(Math.random() * users.length);
       const userId = users[userIndex].id;
       const commentIndex = i % sampleComments.length;
       const content = sampleComments[commentIndex];
+
       await connection.execute(
         "INSERT INTO comments (id, post_id, user_id, content) VALUES (?, ?, ?, ?)",
         [uuidv4(), postId, userId, content]
@@ -431,10 +560,10 @@ async function seed() {
     const addedReposts = new Set();
     for (let i = 0; i < 30; i++) {
       const userIndex = Math.floor(Math.random() * users.length);
-      const postIndex = Math.floor(Math.random() * postIds.length);
+      const postIndex = Math.floor(Math.random() * allPostIds.length);
 
       const userId = users[userIndex].id;
-      const postId = postIds[postIndex];
+      const postId = allPostIds[postIndex];
 
       // Get the original post author to prevent self-reposts
       const postAuthor = await connection.execute(

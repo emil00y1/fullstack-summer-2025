@@ -1,14 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Search, User, MessageSquare } from "lucide-react";
+import { Search, User, MessageSquare, Hash } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const SearchField = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState({ users: [], posts: [] });
+  const [searchResults, setSearchResults] = useState({
+    users: [],
+    posts: [],
+    hashtags: [],
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef(null);
@@ -34,7 +38,7 @@ const SearchField = () => {
       if (searchQuery.trim().length > 1) {
         performSearch(searchQuery);
       } else {
-        setSearchResults({ users: [], posts: [] });
+        setSearchResults({ users: [], posts: [], hashtags: [] });
       }
     }, 300);
 
@@ -77,8 +81,9 @@ const SearchField = () => {
   };
 
   const renderResults = () => {
-    const { users, posts } = searchResults;
-    const hasResults = users.length > 0 || posts.length > 0;
+    const { users, posts, hashtags } = searchResults;
+    const hasResults =
+      users.length > 0 || posts.length > 0 || hashtags.length > 0;
 
     if (isLoading) {
       return <div className="p-2 text-center text-gray-500">Searching...</div>;
@@ -92,6 +97,33 @@ const SearchField = () => {
 
     return (
       <>
+        {/* Hashtags section */}
+        {hashtags.length > 0 && (
+          <div className="mb-2">
+            <div className="px-3 py-1 text-xs font-semibold text-gray-500 bg-gray-50 dark:bg-gray-800">
+              Hashtags
+            </div>
+            {hashtags.map((hashtag, index) => (
+              <Link
+                href={`/search?q=${encodeURIComponent(hashtag.name)}`}
+                key={index}
+                className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800"
+                onClick={() => setShowResults(false)}
+              >
+                <Hash className="h-4 w-4 mr-2 text-blue-500" />
+                <div>
+                  <div className="font-medium text-blue-500">
+                    {hashtag.name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {hashtag.postCount} posts
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
         {/* Users section */}
         {users.length > 0 && (
           <div className="mb-2">
@@ -167,7 +199,7 @@ const SearchField = () => {
         <input
           type="text"
           className="bg-gray-100 dark:bg-gray-800 w-full py-2 pl-10 pr-4 rounded-full border-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          placeholder="Search posts and users"
+          placeholder="Search posts, users, and hashtags"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
