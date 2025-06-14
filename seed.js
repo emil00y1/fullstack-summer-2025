@@ -161,9 +161,6 @@ async function seed() {
       "CREATE INDEX idx_posts_created_at ON posts(created_at)"
     );
     await connection.execute(
-      "CREATE INDEX idx_posts_is_public ON posts(is_public)"
-    );
-    await connection.execute(
       "CREATE INDEX idx_posts_user_id ON posts(user_id)"
     );
     await connection.execute(
@@ -171,19 +168,6 @@ async function seed() {
     );
     await connection.execute(
       "CREATE INDEX idx_comments_post_id ON comments(post_id)"
-    );
-    await connection.execute(
-      "CREATE INDEX idx_follows_follower ON follows(follower_id)"
-    );
-    await connection.execute(
-      "CREATE INDEX idx_comment_likes_comment_id ON comment_likes(comment_id)"
-    );
-    console.log("Creating indexes for roles tables...");
-    await connection.execute(
-      "CREATE INDEX idx_user_roles_user_id ON user_roles(user_id)"
-    );
-    await connection.execute(
-      "CREATE INDEX idx_user_roles_role_id ON user_roles(role_id)"
     );
 
     console.log("Inserting default roles...");
