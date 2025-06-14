@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
 
 export function AuthForm({ 
   type = "login", // "login" or "signup"
@@ -89,7 +90,7 @@ export function AuthForm({
             />
 
             <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
-              {isLoading ? "Loading..." : (isSignup ? "Sign Up" : "Login")}
+              {isLoading ? <Loader2/> : (isSignup ? "Sign Up" : "Login")}
             </Button>
           </form>
         </Form>

@@ -58,7 +58,7 @@ export default function LandingPage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <div><ThemeToggle/></div>
+           <ThemeToggle/>
             <Button variant="ghost" className="font-medium" asChild>
               <Link href="/login">Login</Link>
             </Button>
