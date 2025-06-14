@@ -320,7 +320,9 @@ export default function PostItem({ post, isAdmin }) {
 
           <Link href={`/posts/${post.encryptedId}`} className="block">
             <div className="mt-2 md:mt-1">
-              <p className="whitespace-pre-line">{post.body}</p>
+              <p className="whitespace-pre-line break-all break-words overflow-hidden text-ellipsis line-clamp-5">
+                {post.body}
+              </p>
               {post.image && (
                 <div className="mt-3 rounded-xl overflow-hidden">
                   <img
