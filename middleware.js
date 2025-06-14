@@ -7,8 +7,15 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // ✅ FIX: Include "/" as a public route so unauthenticated users can see landing page
-  const publicRoutes = ["/", "/login", "/signup", "/verify"];
-  
+  const publicRoutes = [
+    "/",
+    "/login",
+    "/signup",
+    "/verify",
+    "/forgot-password",
+    "/reset-password",
+  ];
+
   // ✅ FIX: Use pathname instead of req.url for more reliable matching
   const isPublicRoute = publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
@@ -24,8 +31,6 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  // ✅ FIX: Only redirect logged-in users away from auth pages (not from home)
-  // Home page "/" should be accessible to both logged-in and logged-out users
   const authOnlyRoutes = ["/login", "/signup", "/verify"];
   if (isLoggedIn && authOnlyRoutes.includes(pathname)) {
     const homeUrl = new URL("/", baseUrl);

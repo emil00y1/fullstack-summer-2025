@@ -5,41 +5,39 @@ import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-import Logo from "@/components/Logo";
-import { 
-  MessageSquare, 
-  Heart, 
-  Users, 
-  Search, 
-  ArrowRight
-} from "lucide-react";
-import { ThemeToggle } from "./ThemeToggle";
+import { MessageSquare, Heart, Users, Search, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
   const [currentFeature, setCurrentFeature] = useState(0);
-  
-  const features = useMemo(() => [
-    {
-      icon: MessageSquare,
-      title: "Share Your Thoughts",
-      description: "Express yourself with posts, comments, and real-time conversations"
-    },
-    {
-      icon: Users,
-      title: "Connect with Others",
-      description: "Follow friends, discover new voices, and build your community"
-    },
-    {
-      icon: Heart,
-      title: "Engage & Interact",
-      description: "Like, comment, and share content that matters to you"
-    },
-    {
-      icon: Search,
-      title: "Discover Content",
-      description: "Find trending topics, interesting people, and relevant discussions"
-    }
-  ], []);
+
+  const features = useMemo(
+    () => [
+      {
+        icon: MessageSquare,
+        title: "Share Your Thoughts",
+        description:
+          "Express yourself with posts, comments, and real-time conversations",
+      },
+      {
+        icon: Users,
+        title: "Connect with Others",
+        description:
+          "Follow friends, discover new voices, and build your community",
+      },
+      {
+        icon: Heart,
+        title: "Engage & Interact",
+        description: "Like, comment, and share content that matters to you",
+      },
+      {
+        icon: Search,
+        title: "Discover Content",
+        description:
+          "Find trending topics, interesting people, and relevant discussions",
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,25 +48,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <Logo height={32} width={32} className="fill-primary" />
-          </div>
-          
-          <div className="flex items-center gap-3">
-           <ThemeToggle/>
-            <Button variant="ghost" className="font-medium" asChild>
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button className="font-medium" asChild>
-              <Link href="/signup">Get Started</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="px-6 py-24 max-w-[1200px] mx-auto">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -79,19 +58,29 @@ export default function LandingPage() {
                 Share Your Voice
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed">
-                Connect with friends, share your thoughts, and discover what's happening in your world. 
-                Join the conversation that matters to you.
+                Connect with friends, share your thoughts, and discover what's
+                happening in your world. Join the conversation that matters to
+                you.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="px-8 py-3 text-lg font-medium" asChild>
+              <Button
+                size="lg"
+                className="px-8 py-3 text-lg font-medium"
+                asChild
+              >
                 <Link href="/signup">
                   Join Y Today
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="px-8 py-3 text-lg font-medium" asChild>
+              <Button
+                size="lg"
+                variant="outline"
+                className="px-8 py-3 text-lg font-medium"
+                asChild
+              >
                 <Link href="/login">Sign In</Link>
               </Button>
             </div>
@@ -100,15 +89,21 @@ export default function LandingPage() {
             <div className="grid grid-cols-3 gap-8 pt-12">
               <div className="text-center">
                 <div className="text-3xl font-bold">10K+</div>
-                <div className="text-sm text-muted-foreground">Active Users</div>
+                <div className="text-sm text-muted-foreground">
+                  Active Users
+                </div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold">50K+</div>
-                <div className="text-sm text-muted-foreground">Posts Shared</div>
+                <div className="text-sm text-muted-foreground">
+                  Posts Shared
+                </div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold">100K+</div>
-                <div className="text-sm text-muted-foreground">Conversations</div>
+                <div className="text-sm text-muted-foreground">
+                  Conversations
+                </div>
               </div>
             </div>
           </div>
@@ -121,7 +116,9 @@ export default function LandingPage() {
                   <div className="p-3 bg-muted rounded-full">
                     {(() => {
                       const IconComponent = features[currentFeature]?.icon;
-                      return IconComponent ? <IconComponent className="h-6 w-6" /> : null;
+                      return IconComponent ? (
+                        <IconComponent className="h-6 w-6" />
+                      ) : null;
                     })()}
                   </div>
                   <div>
@@ -130,7 +127,7 @@ export default function LandingPage() {
                     </h3>
                   </div>
                 </div>
-                
+
                 <p className="text-muted-foreground text-lg leading-relaxed">
                   {features[currentFeature]?.description}
                 </p>
@@ -141,7 +138,9 @@ export default function LandingPage() {
                     <div
                       key={index}
                       className={`w-2 h-2 rounded-full transition-colors ${
-                        index === currentFeature ? 'bg-foreground' : 'bg-muted-foreground/30'
+                        index === currentFeature
+                          ? "bg-foreground"
+                          : "bg-muted-foreground/30"
                       }`}
                     />
                   ))}
@@ -159,42 +158,28 @@ export default function LandingPage() {
             Everything You Need to Stay Connected
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Y provides all the tools you need to share, discover, and connect in a safe, 
-            user-friendly environment.
+            Y provides all the tools you need to share, discover, and connect in
+            a safe, user-friendly environment.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
           {features.map((feature, index) => (
-            <Card key={index} className="text-center hover:shadow-lg transition-shadow bg-card">
+            <Card
+              key={index}
+              className="text-center hover:shadow-lg transition-shadow bg-card"
+            >
               <CardContent className="p-8">
                 <div className="p-4 bg-muted rounded-full w-fit mx-auto mb-6">
                   <feature.icon className="h-6 w-6" />
                 </div>
-                <h3 className="font-semibold text-lg mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground">
-                  {feature.description}
-                </p>
+                <h3 className="font-semibold text-lg mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
               </CardContent>
             </Card>
           ))}
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="px-6 py-8 border-t bg-background">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center mb-4 md:mb-0">
-            <Logo height={24} width={24} className="fill-primary" />
-          </div>
-          
-          <div className="text-sm text-muted-foreground">
-            © 2025 Y. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

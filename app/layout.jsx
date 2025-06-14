@@ -8,6 +8,8 @@ import SidebarRight from "@/components/SidebarRight";
 import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const libreFranklin = Libre_Franklin({
   variable: "--font-libre-franklin",
@@ -29,7 +31,11 @@ export default async function RootLayout({ children }) {
       className={`${libreFranklin.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="overflow-x-hidden flex justify-center">
+      <body
+        className={`overflow-x-hidden flex justify-center ${
+          !isLoggedIn ? "min-h-svh" : ""
+        }`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -37,8 +43,10 @@ export default async function RootLayout({ children }) {
           disableTransitionOnChange
         >
           <ThemeWrapper>
-          <div className={`flex w-full ${isLoggedIn ? 'max-w-5xl' : ''}`}>
-          {/* Only show sidebar for authenticated users */}
+            <div
+              className={`flex w-full ${isLoggedIn ? "max-w-5xl" : "flex-col"}`}
+            >
+              {/* Only show sidebar for authenticated users */}
               {isLoggedIn && (
                 <header className="transition-all duration-300 w-16 lg:w-64">
                   <SidebarProvider>
@@ -46,11 +54,15 @@ export default async function RootLayout({ children }) {
                   </SidebarProvider>
                 </header>
               )}
+              {!isLoggedIn && <Header />}
               <main
-                className={`flex-1 px-0 md:px-0 ${!isLoggedIn ? "w-full" : ""}`}
+                className={`flex-1 px-0 md:px-0 ${
+                  !isLoggedIn ? "w-full flex justify-center" : ""
+                }`}
               >
                 <SessionProvider>{children}</SessionProvider>
               </main>
+              {!isLoggedIn && <Footer />}
               {isLoggedIn && <SidebarRight />}
             </div>
             <Toaster />
