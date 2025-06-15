@@ -1,4 +1,4 @@
-// app/signup/page.jsx
+// app/signup/page.jsx - Updated with password confirmation
 "use client";
 
 import { useState } from "react";
@@ -8,31 +8,37 @@ import { z } from "zod";
 import Link from "next/link";
 import { AuthForm } from "@/components/AuthComponent";
 
-// Signup-specific validation schema
-const signupSchema = z.object({
-  username: z
-    .string()
-    .min(1, "Username is required")
-    .min(3, "Username must be at least 3 characters")
-    .max(25, "Username must be at most 25 characters")
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores"
-    ),
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address"),
-  password: z
-    .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(
-      /[!*&?,._-]/,
-      "Password must contain at least one special character (!*&?,.-_)"
-    ),
-});
+// Signup-specific validation schema with password confirmation
+const signupSchema = z
+  .object({
+    username: z
+      .string()
+      .min(1, "Username is required")
+      .min(3, "Username must be at least 3 characters")
+      .max(25, "Username must be at most 25 characters")
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        "Username can only contain letters, numbers, and underscores"
+      ),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Please enter a valid email address"),
+    password: z
+      .string()
+      .min(1, "Password is required")
+      .min(6, "Password must be at least 6 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(
+        /[!*&?,._-]/,
+        "Password must contain at least one special character (!*&?,.-_)"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 export default function SignupPage() {
   const router = useRouter();

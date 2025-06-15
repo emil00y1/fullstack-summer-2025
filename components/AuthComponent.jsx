@@ -1,28 +1,41 @@
-// components/AuthForm.jsx - Consolidate login/signup forms
+// components/AuthComponent.jsx - Updated with password confirmation
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 
-export function AuthForm({ 
+export function AuthForm({
   type = "login", // "login" or "signup"
-  schema, 
-  onSubmit, 
-  isLoading, 
-  error 
+  schema,
+  onSubmit,
+  isLoading,
+  error,
 }) {
   const isSignup = type === "signup";
-  
+
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: isSignup 
-      ? { username: "", email: "", password: "" }
-      : { email: "", password: "" }
+    defaultValues: isSignup
+      ? { username: "", email: "", password: "", confirmPassword: "" }
+      : { email: "", password: "", confirmPassword: "" },
   });
 
   return (
@@ -30,10 +43,9 @@ export function AuthForm({
       <CardHeader>
         <CardTitle>{isSignup ? "Sign Up" : "Login"}</CardTitle>
         <CardDescription>
-          {isSignup 
+          {isSignup
             ? "Enter your details to create your account"
-            : "Enter your email below to login to your account"
-          }
+            : "Enter your email below to login to your account"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -44,7 +56,10 @@ export function AuthForm({
         )}
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-6"
+          >
             {isSignup && (
               <FormField
                 control={form.control}
@@ -89,8 +104,34 @@ export function AuthForm({
               )}
             />
 
-            <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
-              {isLoading ? <Loader2/> : (isSignup ? "Sign Up" : "Login")}
+            {isSignup && (
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <Button
+              type="submit"
+              className="w-full cursor-pointer"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="animate-spin" />
+              ) : isSignup ? (
+                "Sign Up"
+              ) : (
+                "Login"
+              )}
             </Button>
           </form>
         </Form>
