@@ -7,14 +7,28 @@ if (!ENCRYPTION_KEY || Buffer.from(ENCRYPTION_KEY, "hex").length !== 32) {
 }
 
 function encryptId(id) {
-  return Buffer.from(id).toString('base64url');
+  return Buffer.from(id).toString("base64url");
 }
 
 function decryptId(encryptedId) {
+  // Validate input
+  if (
+    !encryptedId ||
+    typeof encryptedId !== "string" ||
+    encryptedId.trim() === ""
+  ) {
+    throw new Error("Invalid encrypted data");
+  }
+
   try {
-    return Buffer.from(encryptedId, 'base64url').toString('utf8');
+    const decoded = Buffer.from(encryptedId, "base64url").toString("utf8");
+    // Additional validation - if the decoded string is empty or invalid, throw
+    if (!decoded) {
+      throw new Error("Invalid encrypted data");
+    }
+    return decoded;
   } catch (error) {
-    throw new Error('Invalid ID');
+    throw new Error("Invalid encrypted data");
   }
 }
 
