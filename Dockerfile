@@ -2,18 +2,17 @@ FROM node:23-slim
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json* ./
+
+RUN npm ci --include=optional
+
 COPY . .
 
-# Add build arguments
+# Build arguments
 ARG NEXTAUTH_URL
-ARG NODE_ENV=production
+ARG NODE_ENV=development
 
-# Set them as environment variables for the build
 ENV NEXTAUTH_URL=$NEXTAUTH_URL
 ENV NODE_ENV=$NODE_ENV
 
-RUN npm run build
-
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]
