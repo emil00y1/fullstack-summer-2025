@@ -1,21 +1,22 @@
 // app/profile/edit/page.jsx
-import { redirect } from 'next/navigation';
-import { auth, signOut } from '@/auth';
-import { executeQuery } from '@/lib/db';
-import { revalidatePath } from 'next/cache';
-import { mkdir } from 'fs/promises';
-import { join } from 'path';
-import sharp from 'sharp';
-import { v4 as uuidv4 } from 'uuid';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Label } from '@/components/ui/label';
-import Image from 'next/image';
-import BioTextarea from '@/components/BioTextarea';
-import BackButton from '@/components/BackButton';
-import DeleteAccountDialog from '@/components/DeleteAccountDialog';
-import { put } from '@vercel/blob';
+import { redirect } from "next/navigation";
+import { auth, signOut } from "@/auth";
+import { useSession } from "next-auth/react";
+import { executeQuery } from "@/lib/db";
+import { revalidatePath } from "next/cache";
+import { mkdir } from "fs/promises";
+import { join } from "path";
+import sharp from "sharp";
+import { v4 as uuidv4 } from "uuid";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
+import Image from "next/image";
+import BioTextarea from "@/components/BioTextarea";
+import BackButton from "@/components/BackButton";
+import DeleteAccountDialog from "@/components/DeleteAccountDialog";
+import { put } from "@vercel/blob";
 
 // Maximum file sizes
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
@@ -23,36 +24,36 @@ const MAX_COVER_SIZE = 4 * 1024 * 1024; // 4MB
 
 // Process profile updates
 async function updateProfile(formData) {
-  'use server';
+  "use server";
 
   try {
     // Get current user session
     const session = await auth();
     if (!session || !session.user) {
-      return { error: 'Not authenticated' };
+      return { error: "Not authenticated" };
     }
 
     const userId = session.user.id;
-    const username = formData.get('username');
-    const bio = formData.get('bio') || '';
+    const username = formData.get("username");
+    const bio = formData.get("bio") || "";
 
     // Validate inputs - no changes here
     if (!username || username.length < 3 || username.length > 30) {
-      return { error: 'Username must be between 3 and 30 characters' };
+      return { error: "Username must be between 3 and 30 characters" };
     }
 
     if (bio && bio.length > 160) {
-      return { error: 'Bio must not exceed 160 characters' };
+      return { error: "Bio must not exceed 160 characters" };
     }
 
     // Check if username is already taken - no changes here
     const existingUser = await executeQuery(
-      'SELECT id FROM users WHERE username = ? AND id != ?',
+      "SELECT id FROM users WHERE username = ? AND id != ?",
       [username, userId]
     );
 
     if (existingUser.length > 0) {
-      return { error: 'Username already taken' };
+      return { error: "Username already taken" };
     }
 
     // Prepare update data
@@ -62,14 +63,14 @@ async function updateProfile(formData) {
     };
 
     // Get environment
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === "production";
 
     // Process avatar file if uploaded
-    const avatarFile = formData.get('avatar');
+    const avatarFile = formData.get("avatar");
     if (avatarFile && avatarFile.size > 0) {
       // Check file size
       if (avatarFile.size > MAX_AVATAR_SIZE) {
-        return { error: 'Avatar image must be less than 2MB' };
+        return { error: "Avatar image must be less than 2MB" };
       }
 
       try {
@@ -78,7 +79,7 @@ async function updateProfile(formData) {
 
         // Process the image with sharp
         const processedAvatar = await sharp(avatarBuffer)
-          .resize(200, 200, { fit: 'cover' })
+          .resize(200, 200, { fit: "cover" })
           .webp({ quality: 80 });
 
         // Handle based on environment
@@ -87,17 +88,17 @@ async function updateProfile(formData) {
           const { url: avatarUrl } = await put(
             `avatars/${avatarFilename}`,
             await processedAvatar.toBuffer(),
-            { access: 'public' }
+            { access: "public" }
           );
 
           updateData.avatar = avatarUrl;
         } else {
           // DEVELOPMENT: Save to local filesystem
           const avatarPath = `/uploads/avatars/${avatarFilename}`;
-          const fullAvatarPath = join(process.cwd(), 'public', avatarPath);
+          const fullAvatarPath = join(process.cwd(), "public", avatarPath);
 
           // Create directory if it doesn't exist
-          await mkdir(join(process.cwd(), 'public', 'uploads', 'avatars'), {
+          await mkdir(join(process.cwd(), "public", "uploads", "avatars"), {
             recursive: true,
           });
 
@@ -107,17 +108,17 @@ async function updateProfile(formData) {
           updateData.avatar = avatarPath;
         }
       } catch (err) {
-        console.error('Error processing avatar:', err);
-        return { error: 'Failed to process avatar image' };
+        console.error("Error processing avatar:", err);
+        return { error: "Failed to process avatar image" };
       }
     }
 
     // Process cover file if uploaded
-    const coverFile = formData.get('cover');
+    const coverFile = formData.get("cover");
     if (coverFile && coverFile.size > 0) {
       // Check file size
       if (coverFile.size > MAX_COVER_SIZE) {
-        return { error: 'Cover image must be less than 4MB' };
+        return { error: "Cover image must be less than 4MB" };
       }
 
       try {
@@ -126,7 +127,7 @@ async function updateProfile(formData) {
 
         // Process the image with sharp
         const processedCover = await sharp(coverBuffer)
-          .resize(1500, 500, { fit: 'cover' })
+          .resize(1500, 500, { fit: "cover" })
           .webp({ quality: 80 });
 
         // Handle based on environment
@@ -135,17 +136,17 @@ async function updateProfile(formData) {
           const { url: coverUrl } = await put(
             `covers/${coverFilename}`,
             await processedCover.toBuffer(),
-            { access: 'public' }
+            { access: "public" }
           );
 
           updateData.cover = coverUrl;
         } else {
           // DEVELOPMENT: Save to local filesystem
           const coverPath = `/uploads/covers/${coverFilename}`;
-          const fullCoverPath = join(process.cwd(), 'public', coverPath);
+          const fullCoverPath = join(process.cwd(), "public", coverPath);
 
           // Create directory if it doesn't exist
-          await mkdir(join(process.cwd(), 'public', 'uploads', 'covers'), {
+          await mkdir(join(process.cwd(), "public", "uploads", "covers"), {
             recursive: true,
           });
 
@@ -155,14 +156,14 @@ async function updateProfile(formData) {
           updateData.cover = coverPath;
         }
       } catch (err) {
-        console.error('Error processing cover:', err);
-        return { error: 'Failed to process cover image' };
+        console.error("Error processing cover:", err);
+        return { error: "Failed to process cover image" };
       }
     }
 
     // Build the SQL query - no changes here
     const fields = Object.keys(updateData);
-    const fieldAssignments = fields.map((field) => `${field} = ?`).join(', ');
+    const fieldAssignments = fields.map((field) => `${field} = ?`).join(", ");
     const values = Object.values(updateData);
 
     // Execute the update - no changes here
@@ -172,81 +173,90 @@ async function updateProfile(formData) {
     ]);
 
     // Revalidate the profile page - no changes here
-    revalidatePath('/profile');
+    revalidatePath("/profile");
 
     return { success: true };
   } catch (error) {
-    console.error('Error updating profile:', error);
-    return { error: 'An unexpected error occurred' };
+    console.error("Error updating profile:", error);
+    return { error: "An unexpected error occurred" };
   }
 }
 
 // Soft delete user profile and all related data
 async function deleteProfile() {
-  'use server';
+  "use server";
 
   try {
     const session = await auth();
     if (!session || !session.user) {
-      return { error: 'Not authenticated' };
+      return { error: "Not authenticated" };
     }
 
     const userId = session.user.id;
 
     // 1. Delete comment likes (user's likes on others' comments)
-    await executeQuery('DELETE FROM comment_likes WHERE user_id = ?', [userId]);
+    await executeQuery("DELETE FROM comment_likes WHERE user_id = ?", [userId]);
 
     // 2. Delete comment likes on user's comments
     await executeQuery(
-      `
-      DELETE FROM comment_likes 
-      WHERE comment_id IN (SELECT id FROM comments WHERE user_id = ?)
-    `,
+      `DELETE FROM comment_likes 
+       WHERE comment_id IN (SELECT id FROM comments WHERE user_id = ?)`,
       [userId]
     );
 
     // 3. Delete user's comments
-    await executeQuery('DELETE FROM comments WHERE user_id = ?', [userId]);
+    await executeQuery("DELETE FROM comments WHERE user_id = ?", [userId]);
 
     // 4. Delete likes (user's likes on others' posts)
-    await executeQuery('DELETE FROM likes WHERE user_id = ?', [userId]);
+    await executeQuery("DELETE FROM likes WHERE user_id = ?", [userId]);
 
     // 5. Delete likes on user's posts
     await executeQuery(
-      `
-      DELETE FROM likes 
-      WHERE post_id IN (SELECT id FROM posts WHERE user_id = ?)
-    `,
+      `DELETE FROM likes 
+       WHERE post_id IN (SELECT id FROM posts WHERE user_id = ?)`,
       [userId]
     );
 
-    // 6. Delete user's posts
-    await executeQuery('DELETE FROM posts WHERE user_id = ?', [userId]);
+    // 6. Delete reposts by the user (user reposting others' posts)
+    await executeQuery("DELETE FROM reposts WHERE user_id = ?", [userId]);
 
-    // 7. Delete follows (both as follower and following)
+    // 7. Delete reposts of user's posts (others reposting user's posts)
     await executeQuery(
-      'DELETE FROM follows WHERE follower_id = ? OR following_id = ?',
+      `DELETE FROM reposts 
+       WHERE post_id IN (SELECT id FROM posts WHERE user_id = ?)`,
+      [userId]
+    );
+
+    // 8. Delete post-hashtag relationships for user's posts
+    await executeQuery(
+      `DELETE FROM post_hashtags 
+       WHERE post_id IN (SELECT id FROM posts WHERE user_id = ?)`,
+      [userId]
+    );
+
+    // 9. Delete user's posts (now safe to delete)
+    await executeQuery("DELETE FROM posts WHERE user_id = ?", [userId]);
+
+    // 10. Delete follows (both as follower and following)
+    await executeQuery(
+      "DELETE FROM follows WHERE follower_id = ? OR following_id = ?",
       [userId, userId]
     );
 
-    await executeQuery('UPDATE users SET avatar = NULL WHERE id = ?', [
-      userId,
-    ]);
+    // 11. Clear user's profile data
+    await executeQuery("UPDATE users SET avatar = NULL WHERE id = ?", [userId]);
+    await executeQuery("UPDATE users SET bio = NULL WHERE id = ?", [userId]);
+    await executeQuery("UPDATE users SET cover = NULL WHERE id = ?", [userId]);
 
-    await executeQuery('UPDATE users SET bio = NULL WHERE id = ?', [userId]);
-
-    await executeQuery('UPDATE users SET cover = NULL WHERE id = ?', [userId]);
-
-
-    // 8. Soft delete the user (mark as deleted)
-    await executeQuery('UPDATE users SET deleted_at = NOW() WHERE id = ?', [
+    // 12. Soft delete the user (mark as deleted)
+    await executeQuery("UPDATE users SET deleted_at = NOW() WHERE id = ?", [
       userId,
     ]);
 
     return { success: true };
   } catch (error) {
-    console.error('Error deleting profile:', error);
-    return { error: 'Failed to delete account. Please try again.' };
+    console.error("Error deleting profile:", error);
+    return { error: "Failed to delete account. Please try again." };
   }
 }
 
@@ -256,7 +266,7 @@ export default async function EditProfilePage() {
 
   // Redirect if not logged in
   if (!session || !session.user) {
-    redirect('/login');
+    redirect("/login");
   }
 
   // Fetch user data
@@ -266,19 +276,19 @@ export default async function EditProfilePage() {
   );
 
   if (!userData || userData.length === 0) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const user = userData[0];
 
   // Handle form submission
   async function handleFormAction(formData) {
-    'use server';
+    "use server";
 
     const result = await updateProfile(formData);
 
     if (result.success) {
-      redirect('/profile');
+      redirect("/profile");
     }
 
     return result;
@@ -287,125 +297,125 @@ export default async function EditProfilePage() {
   return (
     <div>
       <BackButton />
-      <div className='px-6 py-4'>
+      <div className="px-6 py-4">
         {/* Header */}
-        <div className='mb-6'>
-          <h1 className='text-2xl font-bold tracking-tight'>Edit Profile</h1>
-          <p className='text-sm text-gray-500 mt-1'>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold tracking-tight">Edit Profile</h1>
+          <p className="text-sm text-gray-500 mt-1">
             Update your profile information and images
           </p>
         </div>
 
         {/* Content */}
         <div>
-          <form action={handleFormAction} className='space-y-8'>
+          <form action={handleFormAction} className="space-y-8">
             {/* Profile Images Section */}
-            <div className='space-y-6'>
+            <div className="space-y-6">
               <div>
-                <h3 className='text-lg font-medium'>Profile Images</h3>
-                <p className='text-sm text-gray-500'>
+                <h3 className="text-lg font-medium">Profile Images</h3>
+                <p className="text-sm text-gray-500">
                   Customize your avatar and cover photo
                 </p>
               </div>
 
               {/* Cover Image */}
-              <div className='space-y-2'>
-                <Label htmlFor='cover'>Cover Photo</Label>
-                <div className='relative h-40 overflow-hidden rounded-md bg-accent grid place-content-center'>
+              <div className="space-y-2">
+                <Label htmlFor="cover">Cover Photo</Label>
+                <div className="relative h-40 overflow-hidden rounded-md bg-accent grid place-content-center">
                   {user?.cover ? (
                     <Image
                       src={user.cover}
-                      alt='Cover'
-                      className='h-full w-full object-cover'
+                      alt="Cover"
+                      className="h-full w-full object-cover"
                       width={1240}
                       height={400}
                     />
                   ) : (
-                    <span className=''>No photo selected</span>
+                    <span className="">No photo selected</span>
                   )}
                 </div>
                 <Input
-                  type='file'
-                  id='cover'
-                  name='cover'
-                  accept='image/*'
-                  className='cursor-pointer'
+                  type="file"
+                  id="cover"
+                  name="cover"
+                  accept="image/*"
+                  className="cursor-pointer"
                 />
-                <p className='text-sm text-gray-500'>
+                <p className="text-sm text-gray-500">
                   Recommended size: 1240x400px. Max size: 4MB.
                 </p>
               </div>
 
               {/* Avatar */}
-              <div className='space-y-2'>
-                <Label htmlFor='avatar'>Profile Picture</Label>
-                <div className='flex items-center gap-4'>
-                  <Avatar className='h-24 w-24'>
-                    <AvatarImage src={user.avatar} alt='Profile' />
-                    <AvatarFallback className='text-2xl'>
-                      {user.username?.[0]?.toUpperCase() || 'U'}
+              <div className="space-y-2">
+                <Label htmlFor="avatar">Profile Picture</Label>
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={user.avatar} alt="Profile" />
+                    <AvatarFallback className="text-2xl">
+                      {user.username?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <Input
-                    type='file'
-                    id='avatar'
-                    name='avatar'
-                    accept='image/*'
-                    className='w-auto cursor-pointer'
+                    type="file"
+                    id="avatar"
+                    name="avatar"
+                    accept="image/*"
+                    className="w-auto cursor-pointer"
                   />
                 </div>
-                <p className='text-sm text-gray-500'>
+                <p className="text-sm text-gray-500">
                   Square image recommended. Max size: 2MB.
                 </p>
               </div>
             </div>
 
             {/* Profile Information */}
-            <div className='space-y-6'>
+            <div className="space-y-6">
               <div>
-                <h3 className='text-lg font-medium'>Profile Information</h3>
-                <p className='text-sm text-gray-500'>
+                <h3 className="text-lg font-medium">Profile Information</h3>
+                <p className="text-sm text-gray-500">
                   Update your profile details
                 </p>
               </div>
 
               {/* Username */}
-              <div className='space-y-2'>
-                <Label htmlFor='username'>Username</Label>
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id='username'
-                  name='username'
-                  placeholder='username'
-                  defaultValue={user.username || ''}
+                  id="username"
+                  name="username"
+                  placeholder="username"
+                  defaultValue={user.username || ""}
                   required
                   minLength={3}
                   maxLength={30}
                 />
-                <p className='text-sm text-gray-500'>
+                <p className="text-sm text-gray-500">
                   This is your public username.
                 </p>
               </div>
 
               {/* Bio */}
-              <div className='space-y-2'>
-                <Label htmlFor='bio'>Bio</Label>
-                <BioTextarea defaultValue={user.bio || ''} />
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <BioTextarea defaultValue={user.bio || ""} />
               </div>
             </div>
 
-            <Button type='submit' className='cursor-pointer'>
+            <Button type="submit" className="cursor-pointer">
               Save Changes
             </Button>
           </form>
 
           {/* Delete Account Section */}
-          <div className='mt-16 pt-8 border-t border-destructive/20'>
-            <div className='space-y-4'>
+          <div className="mt-16 pt-8 border-t border-destructive/20">
+            <div className="space-y-4">
               <div>
-                <h3 className='text-lg font-medium text-destructive'>
+                <h3 className="text-lg font-medium text-destructive">
                   Delete Account
                 </h3>
-                <p className='text-sm text-gray-500'>
+                <p className="text-sm text-gray-500">
                   Permanently delete your account and all associated data. This
                   action cannot be undone.
                 </p>
