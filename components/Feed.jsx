@@ -9,8 +9,8 @@ import { Separator } from "./ui/separator";
 export default function Feed({ isAdmin }) {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const offsetRef = useRef(0); // Use ref instead of state for offset
   const limit = 10;
 
   const observerTarget = useRef(null);
@@ -20,9 +20,9 @@ export default function Feed({ isAdmin }) {
 
     setIsLoading(true);
     try {
-      const newOffset = reset ? 0 : offset;
+      const currentOffset = reset ? 0 : offsetRef.current;
       const response = await fetch(
-        `/api/posts?limit=${limit}&offset=${newOffset}`
+        `/api/posts?limit=${limit}&offset=${currentOffset}`
       );
 
       if (!response.ok) {
@@ -38,10 +38,10 @@ export default function Feed({ isAdmin }) {
 
       if (reset) {
         setPosts(fetchedPosts);
-        setOffset(limit);
+        offsetRef.current = limit;
       } else {
         setPosts((prevPosts) => [...prevPosts, ...fetchedPosts]);
-        setOffset(offset + limit);
+        offsetRef.current = offsetRef.current + limit;
       }
     } catch (error) {
       console.error("Error fetching posts:", error);
@@ -97,14 +97,13 @@ export default function Feed({ isAdmin }) {
             {posts.map((post) => {
               return (
                 <PostItem
-                  key={post.encryptedId}
+                  key={post.uniqueKey || post.encryptedId}
                   post={post}
                   isAdmin={isAdmin}
                 />
               );
             })}
           </SessionProvider>
-
           {posts.length > 0 && hasMore && (
             <div ref={observerTarget} className="h-4" />
           )}

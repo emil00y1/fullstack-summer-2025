@@ -1,4 +1,3 @@
-// middleware.js - Fixed to allow landing page access
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
@@ -6,7 +5,6 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
 
-  // ✅ FIX: Include "/" as a public route so unauthenticated users can see landing page
   const publicRoutes = [
     "/",
     "/login",
@@ -16,12 +14,10 @@ export default auth((req) => {
     "/reset-password",
   ];
 
-  // ✅ FIX: Use pathname instead of req.url for more reliable matching
   const isPublicRoute = publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 
-  // Get the base URL from NEXTAUTH_URL environment variable
   const baseUrl =
     process.env.NEXTAUTH_URL || "https://exam-summer-2025.vercel.app";
 

@@ -1,9 +1,7 @@
-// app/api/auth/forgot-password/route.js
 import { executeQuery } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { sendPasswordResetEmail } from "@/lib/emailService";
 
-// Generate a random 6-digit OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -26,7 +24,10 @@ export async function POST(request) {
 
     if (users.length === 0) {
       return NextResponse.json(
-        { message: "If an account with this email exists, a reset code has been sent" },
+        {
+          message:
+            "If an account with this email exists, a reset code has been sent",
+        },
         { status: 200 }
       );
     }
@@ -36,7 +37,10 @@ export async function POST(request) {
     // Check if user account is soft deleted
     if (user.deleted_at !== null) {
       return NextResponse.json(
-        { message: "If an account with this email exists, a reset code has been sent" },
+        {
+          message:
+            "If an account with this email exists, a reset code has been sent",
+        },
         { status: 200 }
       );
     }

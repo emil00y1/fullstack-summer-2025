@@ -19,6 +19,8 @@ async function ProfileInfo({
     [userData.id]
   );
 
+  console.log("ProfileInfo - userData:", userData);
+
   return (
     <>
       <div className="relative">
@@ -29,12 +31,16 @@ async function ProfileInfo({
             className="w-full h-full object-cover"
             width={600}
             height={400}
+            loading="lazy"
           />
         </div>
 
-        {/* Profile avatar using Avatar component */}
+        {/* Profile avatar using Avatar component with key to force re-render */}
         <div className="absolute -bottom-12 left-4">
-          <Avatar className="h-24 w-24">
+          <Avatar
+            key={`avatar-${userData.username}-${userData.id}`}
+            className="h-24 w-24"
+          >
             <AvatarImage
               src={userData.avatar}
               alt={userData.username || "Profile"}

@@ -1,9 +1,7 @@
-// app/api/auth/resend-otp/route.js
 import { executeQuery } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { sendVerificationEmail } from "@/lib/emailService";
 
-// Generate a random 6-digit OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }

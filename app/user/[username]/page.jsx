@@ -31,13 +31,15 @@ export default async function UserProfilePage({ params }) {
 
     const userData = users[0];
 
+    console.log("page.jsx - userData:", userData);
+
     let isAdmin = false;
     if (currentUserId) {
       const adminCheck = await executeQuery(
         `SELECT 1 FROM user_roles ur 
-     JOIN roles r ON ur.role_id = r.id 
-     WHERE ur.user_id = ? AND r.name = 'admin'
-     LIMIT 1`,
+          JOIN roles r ON ur.role_id = r.id 
+          WHERE ur.user_id = ? AND r.name = 'admin'
+          LIMIT 1`,
         [currentUserId]
       );
       isAdmin = adminCheck.length > 0;

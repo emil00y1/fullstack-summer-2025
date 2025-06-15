@@ -1,4 +1,3 @@
-// app/api/auth/reset-password/route.js
 import { executeQuery } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { hash } from "bcrypt";
@@ -11,13 +10,16 @@ const resetPasswordSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[!*&?,._-]/, "Password must contain at least one special character (!*&?,.-_)"),
+    .regex(
+      /[!*&?,._-]/,
+      "Password must contain at least one special character (!*&?,.-_)"
+    ),
 });
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    
+
     // Validate input
     const result = resetPasswordSchema.safeParse(body);
     if (!result.success) {
