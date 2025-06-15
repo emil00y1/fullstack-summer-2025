@@ -28,14 +28,14 @@ lint:
     - merge_requests
 
 security-audit:
-  stage: security  
+  stage: security
   image: node:18-alpine
   before_script:
     - npm ci --cache .npm --prefer-offline
   script:
-    - npm audit --audit-level moderate
+    - npm audit --audit-level high
     - echo "Security audit completed"
-  allow_failure: true  
+  allow_failure: true
   only:
     - main
     - merge_requests
@@ -116,10 +116,10 @@ build:
 #         exit 1
 #       fi
 #       echo "MySQL is ready."
-#     - export DEV_DB_HOST=mysql 
+#     - export DEV_DB_HOST=mysql
 #     - export NEXTAUTH_URL=http://localhost:3000
 #     - echo "Starting Next.js server..."
-#     - npm run start &  
+#     - npm run start &
 #     - sleep 10
 #     - |
 #       echo "Waiting for Next.js to be ready..."
@@ -137,7 +137,6 @@ build:
 #   script:
 #     - npm run test:api:ci
 
-
 # docker-build:
 #   stage: docker-build
 #   image: docker:latest
@@ -146,7 +145,7 @@ build:
 #   before_script:
 #     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 #   script:
-#     - docker build 
+#     - docker build
 #       --build-arg NEXTAUTH_URL=$NEXTAUTH_URL_PROD
 #       --build-arg NEXTAUTH_SECRET=$NEXTAUTH_SECRET
 #       -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
