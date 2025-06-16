@@ -24,27 +24,21 @@ describe("Crypto Utils", () => {
     const encrypted1 = encryptId(id);
     const encrypted2 = encryptId(id);
 
-    // Both should decrypt to same value
     expect(decryptId(encrypted1)).toBe(id);
     expect(decryptId(encrypted2)).toBe(id);
 
-    // For base64url encoding, same input produces same output
     expect(encrypted1).toBe(encrypted2);
   });
 
   it("should handle empty string", () => {
-    // Empty string encryption should work
     const encrypted = encryptId("");
 
-    // Since empty string encrypts to empty string, and current implementation
-    // throws for empty string decryption, we expect it to throw
     expect(() => {
       decryptId(encrypted);
     }).toThrow();
   });
 
   it("should throw error for invalid encrypted data", () => {
-    // Test that actually invalid data throws
     expect(() => {
       decryptId(null);
     }).toThrow();
