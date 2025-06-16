@@ -10,8 +10,8 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
       - WATCHPACK_POLLING=true
-      - CHOKIDAR_USEPOLLING=true
       - DEV_DB_HOST=mysql
       - DEV_DB_PORT=3306
       - DEV_DB_USER=root
