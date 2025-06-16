@@ -54,15 +54,27 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    // Delete related records first (to maintain referential integrity)
-    await executeQuery("DELETE FROM likes WHERE post_id = ?", [postId]);
+    // Delete related records in the correct order to respect foreign key constraints
+
+    // 1. Delete comment likes for comments on this post
     await executeQuery(
       "DELETE FROM comment_likes WHERE comment_id IN (SELECT id FROM comments WHERE post_id = ?)",
       [postId]
     );
+
+    // 2. Delete comments on this post
     await executeQuery("DELETE FROM comments WHERE post_id = ?", [postId]);
 
-    // Delete the post
+    // 3. Delete likes on this post
+    await executeQuery("DELETE FROM likes WHERE post_id = ?", [postId]);
+
+    // 4. Delete reposts of this post (this was missing!)
+    await executeQuery("DELETE FROM reposts WHERE post_id = ?", [postId]);
+
+    // 5. Delete post-hashtag relationships
+    await executeQuery("DELETE FROM post_hashtags WHERE post_id = ?", [postId]);
+
+    // 6. Finally, delete the post itself
     await executeQuery("DELETE FROM posts WHERE id = ?", [postId]);
 
     return NextResponse.json({ success: true });
