@@ -119,10 +119,10 @@ export function CreatePost({ onPostCreated }) {
               <Avatar className="h-10 w-10">
                 <AvatarImage
                   src={session?.user?.avatar}
-                  alt={session?.user?.name || "Profile"}
+                  alt={session?.user?.username || "Profile"}
                 />
-                <AvatarFallback>
-                  {session?.user?.name?.charAt(0) || "U"}
+                <AvatarFallback className="capitalize">
+                  {session?.user?.username?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="w-full">
