@@ -10,6 +10,7 @@ export async function GET(request, { params }) {
   try {
     postId = decryptId(encryptedPostId);
   } catch (error) {
+    console.error("Error decrypting post ID:", error);
     return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
   }
 
@@ -72,6 +73,7 @@ export async function POST(request, { params }) {
     try {
       postId = decryptId(encryptedPostId);
     } catch (error) {
+      console.error("Error decrypting post ID:", error);
       return NextResponse.json({ error: "Invalid post ID" }, { status: 400 });
     }
 

@@ -1,6 +1,6 @@
 // components/PostItem.jsx
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   MessageSquare,
   Repeat,
